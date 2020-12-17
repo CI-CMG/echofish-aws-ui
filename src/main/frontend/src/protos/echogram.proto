@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package tutorial;
+
+option java_package = "edu.colorado.cires.cmg.echofish.visualization.model";
+option java_outer_classname = "EchogramProtos";
+
+message DataPoint {
+  required double latitude = 1;
+  required double longitude = 2;
+  required int64 timestamp = 3;
+  required bytes data = 4;
+  required double depth = 5;
+}
+
+message Echogram {
+  repeated DataPoint dataPoints = 1;
+}

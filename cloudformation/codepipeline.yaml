@@ -1,0 +1,249 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: build-@project.artifactId@-@git.branch@
+
+Parameters:
+  RolePermissionsBoundary:
+    Type: String
+    Default: CIRES_Admin_PermissionBoundary
+  RepositoryBucketName:
+    Type: String
+    Default: cires-cmg-echofish-repository
+
+Resources:
+
+  TriggerLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Logging
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+        - PolicyName: SNS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: codepipeline:StartPipelineExecution
+                Resource: !Sub arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}
+
+
+  TriggerLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs12.x
+      Role: !GetAtt TriggerLambdaRole.Arn
+      Handler: index.handler
+      Environment:
+        Variables:
+          PIPELINE: !Ref CodePipeline
+      Code:
+        ZipFile: |
+          var aws = require('aws-sdk');
+          var codepipeline = new aws.CodePipeline();
+          var pipeline = process.env.PIPELINE
+          var snapshots = "@snapshot.list@".split(',');
+          function parseArtifact(str) {
+            var split = str.split(':');
+            var group = split[0];
+            var artifact = split[1];
+            var version = split[split.length - 2];
+            return `${group}:${artifact}:${version}`
+          }
+          var artifacts = [];
+          for( var i = 0; i < snapshots.length; i += 1 ) {
+            artifacts.push(parseArtifact(snapshots[i]));
+          }
+          exports.handler = function(event) {
+            console.log("REQUEST RECEIVED:\n" + JSON.stringify(event));
+            if ( event.Records && event.Records.length && event.Records[0] && event.Records[0].Sns && event.Records[0].Sns.Message ) {
+              var artifact = event.Records[0].Sns.Message;
+              if( artifacts.indexOf(artifact) >= 0 ) {
+                console.log(`SNAPSHOT Updated: ${artifact}`);
+                codepipeline.startPipelineExecution({ name: pipeline }, function(err, data) {
+                  if (err) {
+                    console.log(err, err.stack);
+                  } else {
+                    console.log(data);
+                  }
+                });
+              }
+            }
+          };
+
+  TriggerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TriggerLambda}
+      RetentionInDays: 30
+
+  SubscribeTrigger:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: lambda
+      Endpoint: !GetAtt TriggerLambda.Arn
+      TopicArn:
+        Fn::ImportValue: echofish-build-RepositoryBucketTopicArn
+
+  TriggerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TriggerLambda
+      Principal: sns.amazonaws.com
+      Action: lambda:InvokeFunction
+      SourceArn:
+        Fn::ImportValue: echofish-build-RepositoryBucketTopicArn
+
+  CodePipelineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${RolePermissionsBoundary}
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: @project.artifactId@_@git.branch@-build
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:3.0
+        PrivilegedMode: true
+      Source:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 20
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: @project.artifactId@_@git.branch@
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeStarSourceConnection
+              InputArtifacts: []
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                ConnectionArn:
+                  Fn::ImportValue: echofish-build-GitHubCodeStarConnectionArn
+                FullRepositoryId: @git.remote.origin.url.suffix@
+                BranchName: @git.branch@
+                OutputArtifactFormat: "CODE_ZIP"
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts: []
+              Configuration:
+                ProjectName: !Ref CodeBuild
+              RunOrder: 1
+            - Name: NotifyAction
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              InputArtifacts: []
+              OutputArtifacts: []
+              Configuration:
+                FunctionName:
+                  Fn::ImportValue: echofish-build-ActionLambdaName
+                UserParameters: @project.groupId@:@project.artifactId@:@project.version@
+              RunOrder: 2
+      ArtifactStore:
+        Type: S3
+        Location:
+          Fn::ImportValue: echofish-build-CodePipelineBucketName
+
+  SlackNotification:
+    Type: AWS::CodeStarNotifications::NotificationRule
+    Properties:
+      Name: @project.artifactId@_@git.branch@
+      DetailType: FULL
+      Resource: !Sub arn:${AWS::Partition}:codepipeline:${AWS::Region}:${AWS::AccountId}:${CodePipeline}
+      EventTypeIds:
+        - codepipeline-pipeline-pipeline-execution-failed
+        - codepipeline-pipeline-pipeline-execution-canceled
+        - codepipeline-pipeline-pipeline-execution-started
+        - codepipeline-pipeline-pipeline-execution-resumed
+        - codepipeline-pipeline-pipeline-execution-succeeded
+        - codepipeline-pipeline-pipeline-execution-superseded
+        - codepipeline-pipeline-manual-approval-failed
+        - codepipeline-pipeline-manual-approval-needed
+        - codepipeline-pipeline-manual-approval-succeeded
+      Targets:
+        - TargetType: AWSChatbotSlack
+          TargetAddress:
+            Fn::ImportValue: echofish-build-AWSChatbotSlackArn
+
