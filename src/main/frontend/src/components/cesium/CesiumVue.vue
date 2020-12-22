@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import Cesium from 'cesium/Cesium';
+import * as Cesium from 'cesium/Cesium';
 import { getColorForString } from './colorSelector';
 import MapboxVectorTileImageryProvider from './imagery/MapboxVectorTileImageryProvider';
 import { MVT_BASE_PATH } from '../../services/basePath';
@@ -201,7 +201,6 @@ export default {
       // url: 'https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/web_mercator_gebco_2019_contours/MapServer',
       enablePickFeatures: false,
     });
-
 
     this.viewer = new Cesium.Viewer(this.$refs.cs,
       {

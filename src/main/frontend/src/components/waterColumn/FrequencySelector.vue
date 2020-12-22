@@ -18,7 +18,6 @@
 import store from '@/store/store';
 import { mapActions } from 'vuex';
 
-
 export default {
   name: 'frequencySelector',
 

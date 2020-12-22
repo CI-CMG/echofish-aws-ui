@@ -28,7 +28,6 @@ import SunCalc from 'suncalc';
 import { scaleThreshold } from 'd3-scale';
 import store from '@/store/store';
 
-
 export default {
   name: 'TimeValues',
 

@@ -60,15 +60,15 @@ export default {
         .attr('width', width);
 
       svg.selectAll('.bars')
-        .data(range(palette.length), d => d)
+        .data(range(palette.length), (d) => d)
         .enter()
         .append('rect')
         .attr('class', 'bars')
-        .attr('x', i => ((i * width) / palette.length))
+        .attr('x', (i) => ((i * width) / palette.length))
         .attr('y', 0)
         .attr('width', width / palette.length)
         .attr('height', height)
-        .style('fill', d => this.colorScaleFunction(d));
+        .style('fill', (d) => this.colorScaleFunction(d));
 
       svg.selectAll('rect')
         .on('mouseover', this.handleMouseOver)

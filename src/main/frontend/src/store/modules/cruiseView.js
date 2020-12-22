@@ -2,7 +2,6 @@
 import { colorPalettes } from '@/views/WaterColumnColors';
 import { getField, updateField } from 'vuex-map-fields';
 
-
 export const namespaced = true;
 
 export const state = {

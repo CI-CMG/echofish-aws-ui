@@ -50,7 +50,6 @@ import { CRS } from 'leaflet';
 import { LMap, LTileLayer, LControlScale } from 'vue2-leaflet';
 // import { openArray } from 'zarr';
 
-
 export default {
   name: 'cruise-view',
   components: {

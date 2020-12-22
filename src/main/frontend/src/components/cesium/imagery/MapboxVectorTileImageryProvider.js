@@ -48,7 +48,6 @@ const computeRingWindingOrder = (ring) => {
     : WindingOrder.CLOCKWISE;
 };
 
-
 // Use x,y,level vector tile to produce imagery for newX,newY,newLevel
 const overzoomGeometry = (rings, nativeTile, newExtent, newTile) => {
   const diffZ = newTile.level - nativeTile.level;
@@ -84,7 +83,6 @@ const inside = (point, vs) => {
 
   const x = point.x;
 
-
   const y = point.y;
 
   // eslint-disable-next-line no-shadow
@@ -92,10 +90,8 @@ const inside = (point, vs) => {
   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
     const xi = vs[i].x;
 
-
     const yi = vs[i].y;
     const xj = vs[j].x;
-
 
     const yj = vs[j].y;
 
@@ -238,7 +234,6 @@ class MapboxVectorTileImageryProvider {
 
     this._ready = true;
   }
-
 
   get url() {
     return this._uriTemplate.expression;
@@ -404,7 +399,6 @@ class MapboxVectorTileImageryProvider {
     return true;
   }
 
-
   /**
    * Gets the credits to be displayed when a given tile is displayed.
    * @function
@@ -423,7 +417,6 @@ class MapboxVectorTileImageryProvider {
     }
     return undefined;
   }
-
 
   _drawTile(requestedTile, nativeTile, tile, canvas) {
     // const layer = tile.layers[this._layerName];
@@ -521,10 +514,8 @@ class MapboxVectorTileImageryProvider {
       }
     }
 
-
     return canvas;
   }
-
 
   _buildImageUrl(x, y, level) {
     return this._uriTemplate.expand({ z: level, x, y });
@@ -549,14 +540,13 @@ class MapboxVectorTileImageryProvider {
     const that = this;
     const url = this._buildImageUrl(nativeTile.x, nativeTile.y, nativeTile.level);
 
-    return loadArrayBuffer(url).then(data => that._drawTile(
+    return loadArrayBuffer(url).then((data) => that._drawTile(
       requestedTile,
       nativeTile,
       new VectorTile(new Protobuf(data)),
       canvas,
     ));
   }
-
 
   /**
    * Requests the image for a given tile.  This function should
@@ -581,7 +571,6 @@ class MapboxVectorTileImageryProvider {
     canvas.height = this._tileHeight;
     return this._requestImage(x, y, level, canvas);
   }
-
 
   /**
    * Asynchronously determines what features, if any, are located at a given longitude and latitude within
@@ -697,7 +686,6 @@ class MapboxVectorTileImageryProvider {
     });
   }
 }
-
 
 // MapboxVectorTileImageryProvider.prototype.createHighlightImageryProvider = function(
 //   regionUniqueID

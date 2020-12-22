@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { resolveApiPath } from '@/services/basePath';
-import protos from '@/protos/echogram.proto';
+// import protos from '@/protos/echogram.proto';
 
 const apiClient = axios.create({
   timeout: 60000,
@@ -19,25 +19,25 @@ const formClient = axios.create({
   },
 });
 
-const protobufClient = axios.create({
-  timeout: 60000,
-  baseURL: resolveApiPath(),
-  headers: {
-    Accept: 'application/octet-stream',
-  },
-  responseType: 'arraybuffer',
-});
+// const protobufClient = axios.create({
+//   timeout: 60000,
+//   baseURL: resolveApiPath(),
+//   headers: {
+//     Accept: 'application/octet-stream',
+//   },
+//   responseType: 'arraybuffer',
+// });
 
-const { tutorial: { Echogram } } = protos;
+// const { tutorial: { Echogram } } = protos;
 
 export default {
-  getEchogram(cruiseName, start, end, frequencyKHz) {
-    return protobufClient.get(`/visualization-service/api/v1/echogram/${cruiseName}`, {
-      params: {
-        start, end, frequencyKHz,
-      },
-    }).then(response => Echogram.toObject(Echogram.decode(new Uint8Array(response.data))));
-  },
+  // getEchogram(cruiseName, start, end, frequencyKHz) {
+  //   return protobufClient.get(`/visualization-service/api/v1/echogram/${cruiseName}`, {
+  //     params: {
+  //       start, end, frequencyKHz,
+  //     },
+  //   }).then((response) => Echogram.toObject(Echogram.decode(new Uint8Array(response.data))));
+  // },
   importPointData(formData) {
     return formClient.post('/zuul/upload-service/api/v1/wcad', formData);
   },
@@ -72,7 +72,6 @@ export default {
       // TODO why is like required "=" does not seem to work
       params.cql_filer = `cruise_name like '${cruiseName}'`;
     }
-
 
     // return apiClient.get('/geoserver/geoserver/geomesa/ows', {
     //   params,

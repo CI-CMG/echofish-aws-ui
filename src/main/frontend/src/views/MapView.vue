@@ -14,7 +14,6 @@
   </div>
 </template>
 
-
 <script>
 import { mapState, mapActions } from 'vuex';
 import CesiumVue from '@/components/cesium/CesiumVue.vue';

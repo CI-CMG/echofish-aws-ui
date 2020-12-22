@@ -20,7 +20,7 @@
 
 import { mapActions, mapState } from 'vuex';
 import vueSlider from 'vue-slider-component';
-import 'vue-slider-component/theme/antd.css';
+// import 'vue-slider-component/theme/antd.css';
 import store from '@/store/store';
 import * as d3 from 'd3';
 

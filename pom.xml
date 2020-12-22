@@ -11,8 +11,8 @@
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <node.version>v12.16.1</node.version>
-    <npm.version>6.13.4</npm.version>
+    <node.version>v14.15.3</node.version>
+    <npm.version>6.14.9</npm.version>
   </properties>
 
 
