@@ -1,16 +1,7 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: white;
+html {
+  font-size: 13px;
 }
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+
 #nav {
   z-index: 999;
   position: absolute;
@@ -128,4 +119,20 @@ html, body {
 
 .waterColumnDashboard p {
   line-height: 0.7em;
+}
+
+.import-status-card {
+  &.card {
+    min-width: 500px;
+    max-width: 500px;
+    margin-bottom: 30px;
+    .card-header {
+      height: 150px;
+      overflow: auto;
+    }
+  }
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
 }

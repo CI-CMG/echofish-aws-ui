@@ -1,4 +1,3 @@
-import './resourceBasePath'; // This must be imported first
 import Vue from 'vue';
 import Vuex from 'vuex';
 // import vSelect from 'vue-select';

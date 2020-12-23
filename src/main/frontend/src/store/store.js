@@ -2,14 +2,18 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import * as mapView from '@/store/modules/mapView';
 import * as cruiseView from '@/store/modules/cruiseView';
-import * as importView from '@/store/modules/importStore';
+import app from './modules/appModule';
+import datasets from './modules/datasetsModule';
+import dataset from './modules/datasetModule';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   modules: {
+    app,
     mapView,
     cruiseView,
-    importView,
+    datasets,
+    dataset,
   },
 });

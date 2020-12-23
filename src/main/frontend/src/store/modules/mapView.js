@@ -1,4 +1,4 @@
-import apiService from '@/services/apiService';
+// import apiService from '@/services/apiService';
 
 export const namespaced = true;
 
@@ -51,34 +51,34 @@ export const mutations = {
 };
 
 export const actions = {
-  updateViewRect({ commit }, viewRect) {
-    commit('UPDATE_VIEW_RECT', viewRect);
-  },
-  getGeoFeatures({ commit }, config) {
-    commit('GEOJSON_REQUEST');
-    return apiService.getGeoFeatures(config)
-      .then((response) => {
-        commit('GEOJSON_SUCCESS', response.data);
-        return response.data;
-      }).catch((error) => {
-      // TODO handle errors
-        console.log(error);
-        commit('GEOJSON_FAILURE');
-      });
-  },
-  getMetadata({ commit }, payload) {
-    commit('METADATA_REQUEST', payload);
-    return apiService.getViewMetadata(payload)
-      .then((response) => {
-        commit('METADATA_SUCCESS', response.data);
-        return response.data;
-      }).catch((error) => {
-      // TODO handle errors
-        console.log(error);
-        commit('METADATA_FAILURE');
-        throw error;
-      });
-  },
+  // updateViewRect({ commit }, viewRect) {
+  //   commit('UPDATE_VIEW_RECT', viewRect);
+  // },
+  // getGeoFeatures({ commit }, config) {
+  //   commit('GEOJSON_REQUEST');
+  //   return apiService.getGeoFeatures(config)
+  //     .then((response) => {
+  //       commit('GEOJSON_SUCCESS', response.data);
+  //       return response.data;
+  //     }).catch((error) => {
+  //     // TODO handle errors
+  //       console.log(error);
+  //       commit('GEOJSON_FAILURE');
+  //     });
+  // },
+  // getMetadata({ commit }, payload) {
+  //   commit('METADATA_REQUEST', payload);
+  //   return apiService.getViewMetadata(payload)
+  //     .then((response) => {
+  //       commit('METADATA_SUCCESS', response.data);
+  //       return response.data;
+  //     }).catch((error) => {
+  //     // TODO handle errors
+  //       console.log(error);
+  //       commit('METADATA_FAILURE');
+  //       throw error;
+  //     });
+  // },
 };
 
 export const getters = {

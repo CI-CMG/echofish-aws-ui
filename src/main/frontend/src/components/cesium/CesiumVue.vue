@@ -4,9 +4,9 @@
 
 <script>
 import * as Cesium from 'cesium/Cesium';
+import { MVT_BASE_PATH } from '@/basePath';
 import { getColorForString } from './colorSelector';
 import MapboxVectorTileImageryProvider from './imagery/MapboxVectorTileImageryProvider';
-import { MVT_BASE_PATH } from '../../services/basePath';
 
 const MAX_CLICKABLE_HEIGHT = 150000;
 
