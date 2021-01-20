@@ -1,5 +1,4 @@
-// import apiService from '@/services/apiService';
-import { colorPalettes } from '@/views/WaterColumnColors';
+import { colorPalettes } from '@/views/echofish/cruise/WaterColumnColors';
 import { getField, updateField } from 'vuex-map-fields';
 
 export const namespaced = true;

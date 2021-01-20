@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import MapView from '@/views/MapView.vue';
-import CruiseView from '@/views/CruiseView.vue';
+import MapView from '@/views/echofish/map/MapView.vue';
+import CruiseView from '@/views/echofish/cruise/CruiseView.vue';
 import NProgress from 'nprogress';
 import Admin from '@/views/admin/Admin.vue';
 import Echofish from '@/views/echofish/Echofish.vue';
@@ -9,7 +9,7 @@ import Datasets from '@/views/admin/dataset/Datasets.vue';
 import DatasetList from '@/views/admin/dataset/list/DatasetList.vue';
 import DatasetDetail from '@/views/admin/dataset/detail/DatasetDetail.vue';
 import { register } from '@/apiMiddleware';
-import View from './View.vue';
+import View from '@/views/View.vue';
 
 Vue.use(Router);
 

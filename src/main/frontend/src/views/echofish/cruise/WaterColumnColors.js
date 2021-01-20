@@ -36,3 +36,5 @@ export const colorPalettes = {
     '#8E063B',
   ],
 };
+
+export const defaultColorPalette = 'viridis';

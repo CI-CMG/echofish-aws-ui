@@ -1,138 +1,228 @@
+//body {
+//  overflow-x: hidden;
+//}
+//
+//* {
+//  box-sizing: border-box;
+//}
+
 html {
   font-size: 13px;
 }
 
-#nav {
-  z-index: 999;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.75);
-  padding: 3px 10px;
-  a {
-    text-decoration: none;
-    font-weight: bold;
-    font-family: 'Roboto', 'Syncopate', sans-serif;
-    letter-spacing: 0.1em;
-    font-size: 1.2em;
-    color: #fff3f8;
-    &.router-link-exact-active {
-      color: #bcffb8;
-    }
-  }
-  a:link { color: #62912d; }
-  a:visited { color: #62912d; }
-  a:hover { color: #9e23ff; }
-  a:active { color: #9179ff; }
-}
-.noselect {
-  -webkit-touch-callout: none; -webkit-user-select: none;
-  -moz-user-select: none; -ms-user-select: none; user-select: none;
-}
+//html,
+//body {
+//  padding: 0;
+//  margin: 0;
+//  color: #ebebeb;
+//}
 
-.cruise-view {
-  #mapWrapper {
-    z-index: 99;
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    width: 250px; /* controls the height/width of the map thumbnail */
-    height: 250px;
-    text-align: center;
-    cursor: default;
-    border: 2px solid #62912d;
-  }
-  #palette {
-    float: left;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 5px 10px;
-  }
-  #colorpalette:hover .bars { opacity: 0.5; }
-  #colorpalette {
-    padding: 0px 0px 0px 0px;
-    .bars:hover {
-      opacity: 1;
-    }
-  }
-  #sliderWrapper div {
-    z-index: 999;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  #sliderWrapper { border-top: 2px solid #62912d; padding-top: 5px;}
-  .vue-slider-process { background-color: #62912d; }
-  #headsUpWrapper {
-    z-index: 99;
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    text-align: center;
-    cursor: default;
-    border: 2px solid rgba(98, 145, 45, 0.77);
-    background-color: rgba(255, 250, 240, 0.90);
-    border-radius: 10px;
-    padding: 0px 10px;
-  }
-  p {
-    padding: 0px 20px;
-    margin: 0px 0px;
-    border-radius: 15px;
-    font-size: 0.8em;
-    color: slategrey;
-  }
-  .heading {
-    font-weight: 900;
-    color: #62912d;
-    font-size: 1.3em;
-    letter-spacing: 0.25em;
-  }
-  #timeToggleButtons {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-  }
-  .rangeValue {
-    font-size: 0.75em;
-    color: #9179ff;
-    padding: 0;
-    margin: 0;
-  }
-  #minRangeValue { float: left; margin-left: 10px; }
-  #maxRangeValue { float: right; margin-right: 4px; }
-}
+//#nav {
+//  z-index: 999;
+//  position: absolute;
+//  top: 10px;
+//  left: 10px;
+//  border-radius: 5px;
+//  background-color: rgba(255, 255, 255, 0.75);
+//  padding: 3px 10px;
+//
+//  a {
+//    text-decoration: none;
+//    font-weight: bold;
+//    font-family: 'Roboto', 'Syncopate', sans-serif;
+//    letter-spacing: 0.1em;
+//    font-size: 1.2em;
+//    color: #fff3f8;
+//
+//    &.router-link-exact-active {
+//      color: #bcffb8;
+//    }
+//  }
+//
+//  a:link {
+//    color: #62912d;
+//  }
+//
+//  a:visited {
+//    color: #62912d;
+//  }
+//
+//  a:hover {
+//    color: #9e23ff;
+//  }
+//
+//  a:active {
+//    color: #9179ff;
+//  }
+//}
+
+//.noselect {
+//  -webkit-touch-callout: none;
+//  -webkit-user-select: none;
+//  -moz-user-select: none;
+//  -ms-user-select: none;
+//  user-select: none;
+//}
+
+//.cruise-view {
+//  #mapWrapper {
+//    z-index: 99;
+//    position: absolute;
+//    bottom: 10px;
+//    left: 10px;
+//    width: 250px; /* controls the height/width of the map thumbnail */
+//    height: 250px;
+//    text-align: center;
+//    cursor: default;
+//    border: 2px solid #62912d;
+//  }
+//
+//  #palette {
+//    float: left;
+//    margin-left: auto;
+//    margin-right: auto;
+//    padding: 5px 10px;
+//  }
+//
+//  #colorpalette:hover .bars {
+//    opacity: 0.5;
+//  }
+//
+//  #colorpalette {
+//    padding: 0px 0px 0px 0px;
+//
+//    .bars:hover {
+//      opacity: 1;
+//    }
+//  }
+//
+//  #sliderWrapper div {
+//    z-index: 999;
+//    display: block;
+//    margin-left: auto;
+//    margin-right: auto;
+//  }
+//
+//  #sliderWrapper {
+//    border-top: 2px solid #62912d;
+//    padding-top: 5px;
+//  }
+//
+//  .vue-slider-process {
+//    background-color: #62912d;
+//  }
+//
+//  #headsUpWrapper {
+//    z-index: 99;
+//    position: absolute;
+//    bottom: 15px;
+//    right: 15px;
+//    text-align: center;
+//    cursor: default;
+//    border: 2px solid rgba(98, 145, 45, 0.77);
+//    background-color: rgba(255, 250, 240, 0.90);
+//    border-radius: 10px;
+//    padding: 0px 10px;
+//  }
+//
+//  p {
+//    padding: 0px 20px;
+//    margin: 0px 0px;
+//    border-radius: 15px;
+//    font-size: 0.8em;
+//    color: slategrey;
+//  }
+//
+//  .heading {
+//    font-weight: 900;
+//    color: #62912d;
+//    font-size: 1.3em;
+//    letter-spacing: 0.25em;
+//  }
+//
+//  #timeToggleButtons {
+//    position: fixed;
+//    top: 10px;
+//    right: 10px;
+//  }
+//
+//  .rangeValue {
+//    font-size: 0.75em;
+//    color: #9179ff;
+//    padding: 0;
+//    margin: 0;
+//  }
+//
+//  #minRangeValue {
+//    float: left;
+//    margin-left: 10px;
+//  }
+//
+//  #maxRangeValue {
+//    float: right;
+//    margin-right: 4px;
+//  }
+//}
+
 .map {
   width: 100%;
   height: 100%;
-  .cesium-credit-logoContainer { display: none; }
-  .cesium-viewer-bottom { display: none; }
-  .cesium-widget-credits { display: none; }
-  .cesium-viewer-animationContainer { display: none; }
-  .cesium-credit-logoContainer { display: none; }
-  .cesium-viewer-toolbar { display: none; }
-}
-.map-view {
-  div.cesium-viewer { width: 100vw; height: 100vh; }
-}
 
-.waterColumnDashboard p {
-  line-height: 0.7em;
-}
+  .cesium-credit-logoContainer {
+    display: none;
+  }
 
-.import-status-card {
-  &.card {
-    min-width: 500px;
-    max-width: 500px;
-    margin-bottom: 30px;
-    .card-header {
-      height: 150px;
-      overflow: auto;
-    }
+  .cesium-viewer-bottom {
+    display: none;
+  }
+
+  .cesium-widget-credits {
+    display: none;
+  }
+
+  .cesium-viewer-animationContainer {
+    display: none;
+  }
+
+  .cesium-credit-logoContainer {
+    display: none;
+  }
+
+  .cesium-viewer-toolbar {
+    display: none;
   }
 }
 
+.map-view {
+  div.cesium-viewer {
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+//.waterColumnDashboard p {
+//  line-height: 0.7em;
+//}
+//
+//.import-status-card {
+//  &.card {
+//    min-width: 500px;
+//    max-width: 500px;
+//    margin-bottom: 30px;
+//
+//    .card-header {
+//      height: 150px;
+//      overflow: auto;
+//    }
+//  }
+//}
+
 .breadcrumb-item + .breadcrumb-item::before {
   content: ">";
+}
+
+
+
+.cruiseView {
+
 }

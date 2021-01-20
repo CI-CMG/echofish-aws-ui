@@ -6,6 +6,18 @@ const cesiumSource = 'node_modules/cesium/Source';
 const cesiumWorkers = '../Build/Cesium/Workers';
 
 module.exports = {
+  chainWebpack: (config) => {
+    config.plugin('html')
+      .tap((args) => {
+        args[0].minify = false;
+        return args;
+      });
+  },
+  publicPath: process.env.NODE_ENV === 'production' ? '@contextRoot@' : '/',
+  devServer: {
+    hotOnly: true,
+    https: true,
+  },
   configureWebpack: {
     output: {
       sourcePrefix: '',
