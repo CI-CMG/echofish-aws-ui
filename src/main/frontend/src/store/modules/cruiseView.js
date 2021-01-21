@@ -160,10 +160,10 @@ export default {
       return state.selectedTimezone;
     },
     centerLat(state) {
-      return state.selectedLat;
+      return state.centerLat;
     },
     centerLon(state) {
-      return state.selectedLon;
+      return state.centerLon;
     },
     centerTimestampMillis(state) {
       return state.centerTimestampMillis;

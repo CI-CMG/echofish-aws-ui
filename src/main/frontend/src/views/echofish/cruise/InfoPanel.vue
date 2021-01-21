@@ -3,8 +3,8 @@
     <div style="width: 100%; height: 150px;">
       <CesiumVue
         ref="map"
-        :initial-longitude="67.89"
-        :initial-latitude="123.45"
+        :initial-longitude="centerLon || 0"
+        :initial-latitude="centerLat || 0"
         :initial-height="20000.0"
         :maximum-zoom-distance="25000000"
         :on-path-click="onPathClick"
@@ -66,6 +66,7 @@ export default {
   },
   watch: {
     centerLatLon(latLon) {
+      console.log('centerLatLon');
       this.flyTo(latLon);
     },
   },
