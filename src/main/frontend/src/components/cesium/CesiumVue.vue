@@ -72,32 +72,75 @@ export default {
       }
     },
     handleMouseClicked({ position }) {
-      // const { camera, scene } = this.viewer;
-      // const pickedObject = scene.pick(position);
-      const { camera, scene, imageryLayers } = this.viewer;
-      const cartesian = camera.pickEllipsoid(position, scene.globe.ellipsoid);
-      const pickRay = camera.getPickRay(position);
-      if (cartesian && pickRay) {
-        const featuresPromise = imageryLayers.pickImageryLayerFeatures(pickRay, scene);
-        if (featuresPromise) {
-          Cesium.when(featuresPromise, (features) => {
-            if (features && features.length) {
-              // const info = features[0];
-              // const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-              // const longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
-              // const latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
-              // const cruiseName = info.properties.cruise_name;
+      const picked = this.pickObject(position);
+      if (picked) {
+        this.onPathClick(picked);
+      } else {
+        this.pickImageryLayerFeature(position, (featureInfo) => {
+          this.onPathClick(featureInfo);
+        });
+      }
+      //
+      //
+      //
+      // // const { camera, scene } = this.viewer;
+      // // const pickedObject = scene.pick(position);
+      // const { camera, scene, imageryLayers } = this.viewer;
+      // const cartesian = camera.pickEllipsoid(position, scene.globe.ellipsoid);
+      // const pickRay = camera.getPickRay(position);
+      // if (cartesian && pickRay) {
+      //   const featuresPromise = imageryLayers.pickImageryLayerFeatures(pickRay, scene);
+      //   if (featuresPromise) {
+      //     Cesium.when(featuresPromise, (features) => {
+      //       if (features && features.length) {
+      //         // const info = features[0];
+      //         // const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+      //         // const longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
+      //         // const latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
+      //         // const cruiseName = info.properties.cruise_name;
+      //
+      //         this.onPathClick();
+      //       }
+      //     });
+      //   }
+      // }
+    },
+    objectFromCartesian(cruiseName, cartesian) {
+      const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+      const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+      const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+      const longitudeString = longitude.toFixed(4);
+      const latitudeString = latitude.toFixed(4);
 
-              this.onPathClick();
-            }
-          });
+      return {
+        cartesian,
+        cruiseName,
+        longitude,
+        longitudeString,
+        latitude,
+        latitudeString,
+      };
+    },
+    pickObject(endPosition) {
+      const { camera, scene } = this.viewer;
+      const cartesian = camera.pickEllipsoid(endPosition, scene.globe.ellipsoid);
+      const pickedObject = scene.pick(endPosition);
+      if (Cesium.defined(pickedObject)) {
+        const entity = pickedObject.id;
+        if (cartesian && entity) {
+          if (entity.polyline && camera.positionCartographic.height <= MAX_CLICKABLE_HEIGHT) {
+            this.$refs.cs.style.cursor = 'pointer';
+          }
+
+          return this.objectFromCartesian(pickedObject.id.name, cartesian);
         }
       }
+      return null;
     },
-    handleMouseMoved(movement) {
+    pickImageryLayerFeature(endPosition, callback) {
       const { camera, scene, imageryLayers } = this.viewer;
-      const cartesian = camera.pickEllipsoid(movement.endPosition, scene.globe.ellipsoid);
-      const pickRay = camera.getPickRay(movement.endPosition);
+      const cartesian = camera.pickEllipsoid(endPosition, scene.globe.ellipsoid);
+      const pickRay = camera.getPickRay(endPosition);
       if (cartesian && pickRay) {
         const featuresPromise = imageryLayers.pickImageryLayerFeatures(pickRay, scene);
         if (featuresPromise) {
@@ -107,57 +150,43 @@ export default {
               if (camera.positionCartographic.height <= MAX_CLICKABLE_HEIGHT) {
                 this.$refs.cs.style.cursor = 'pointer';
               }
-              const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-              const longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
-              const latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
 
-              const cruiseName = info.properties.cruise_name;
-
-              this.box.position = cartesian;
-              this.box.label.show = true;
-              this.box.label.text = `Cruise: ${cruiseName}\nLon: ${(`${longitudeString}`)}\u00B0`
-                + `\nLat: ${(`${latitudeString}`)}\u00B0`;
+              callback(this.objectFromCartesian(info.properties.cruise_name, cartesian));
             } else {
-              this.$refs.cs.style.cursor = 'default';
-              this.box.label.show = false;
+              callback(null);
             }
-
-            // features.forEach((info) => {
-            //   console.log(info.properties.cruise_name);
-            // });
           });
         } else {
-          this.$refs.cs.style.cursor = 'default';
-          this.box.label.show = false;
+          callback(null);
         }
+      } else {
+        callback(null);
+      }
+    },
+    selectPointer(featureInfo) {
+      const { camera } = this.viewer;
+      if (featureInfo) {
+        if (camera.positionCartographic.height <= MAX_CLICKABLE_HEIGHT) {
+          this.$refs.cs.style.cursor = 'pointer';
+        }
+
+        this.box.position = featureInfo.cartesian;
+        this.box.label.show = true;
+        this.box.label.text = `Cruise: ${featureInfo.cruiseName}\nLon: ${(`${featureInfo.longitudeString}`)}\u00B0`
+          + `\nLat: ${(`${featureInfo.latitudeString}`)}\u00B0`;
       } else {
         this.$refs.cs.style.cursor = 'default';
         this.box.label.show = false;
       }
-
-      const pickedObject = scene.pick(movement.endPosition);
-      if (Cesium.defined(pickedObject)) {
-        // const cartesian = camera.pickEllipsoid(movement.endPosition, scene.globe.ellipsoid);
-        const entity = pickedObject.id;
-        if (cartesian && entity) {
-          if (entity.polyline && camera.positionCartographic.height <= MAX_CLICKABLE_HEIGHT) {
-            this.$refs.cs.style.cursor = 'pointer';
-          }
-
-          const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-          const longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(4);
-          const latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(4);
-
-          this.box.position = cartesian;
-          this.box.label.show = true;
-          this.box.label.text = `Cruise: ${pickedObject.id.name}\nLon: ${(`${longitudeString}`)}\u00B0`
-              + `\nLat: ${(`${latitudeString}`)}\u00B0`;
-        } else {
-          this.box.label.show = false;
-        }
+    },
+    handleMouseMoved(movement) {
+      const picked = this.pickObject(movement.endPosition);
+      if (picked) {
+        this.selectPointer(picked);
       } else {
-        this.$refs.cs.style.cursor = 'default';
-        this.box.label.show = false;
+        this.pickImageryLayerFeature(movement.endPosition, (featureInfo) => {
+          this.selectPointer(featureInfo);
+        });
       }
     },
     flyTo({ latitude, longitude, height }) {

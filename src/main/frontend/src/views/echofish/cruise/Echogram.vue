@@ -26,6 +26,9 @@ import { LMap, LTileLayer } from 'vue2-leaflet';
 export default {
   props: [
     'cruise',
+    'onMoveEchogram',
+    'lat',
+    'lon',
   ],
   components: {
     LMap,
@@ -33,14 +36,22 @@ export default {
   },
   computed: {
     ...mapGetters({
-      center: 'cruiseView/center',
+      mockCenter: 'cruiseView/center',
       zoom: 'cruiseView/zoom',
     }),
+    center() {
+      // TODO convert lat / lon to center
+      // eslint-disable-next-line no-unused-vars
+      const lat = this.lat;
+      // eslint-disable-next-line no-unused-vars
+      const lon = this.lon;
+      return this.mockCenter;
+    },
   },
   methods: {
     ...mapMutations({
       onSelectPoint: 'cruiseView/onSelectPoint',
-      onMoveEchogram: 'cruiseView/onMoveEchogram',
+      // onMoveEchogram: 'cruiseView/onMoveEchogram',
       setCenter: 'cruiseView/center',
       setZoom: 'cruiseView/zoom',
     }),

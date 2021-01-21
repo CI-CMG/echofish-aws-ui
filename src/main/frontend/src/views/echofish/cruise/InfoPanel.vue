@@ -3,8 +3,8 @@
     <div style="width: 100%; height: 150px;">
       <CesiumVue
         ref="map"
-        :longitude="centerLon || 0"
-        :latitude="centerLat || 0"
+        :longitude="lon"
+        :latitude="lat"
         :height="20000.0"
         :maximum-zoom-distance="25000000"
         :on-path-click="onPathClick"
@@ -27,11 +27,14 @@
 
 <script>
 import CesiumVue from '@/components/cesium/CesiumVue.vue';
-// import * as Cesium from 'cesium/Cesium';
 import logoSmall from '@/assets/blue_small.png';
 import { mapMutations, mapGetters } from 'vuex';
 
 export default {
+  props: [
+    'lon',
+    'lat',
+  ],
   components: {
     CesiumVue,
   },
@@ -47,8 +50,6 @@ export default {
       selectedTimestampMillis: 'cruiseView/selectedTimestampMillis',
       selectedDepthMeters: 'cruiseView/selectedDepthMeters',
       selectedDateTime: 'cruiseView/selectedDateTime',
-      centerLat: 'cruiseView/centerLat',
-      centerLon: 'cruiseView/centerLon',
     }),
     useLocalTime: {
       get() {
@@ -58,16 +59,10 @@ export default {
         this.setUseLocalTime(value);
       },
     },
-    // centerLatLon() {
-    //   return {
-    //     latitude: this.centerLat,
-    //     longitude: this.centerLon,
-    //   };
-    // },
     billboard() {
       return {
-        latitude: this.centerLat,
-        longitude: this.centerLon,
+        latitude: this.lat,
+        longitude: this.lon,
         billboard: {
           image: logoSmall,
           width: 20,
@@ -76,43 +71,13 @@ export default {
       };
     },
   },
-  // watch: {
-  //   centerLatLon(latLon) {
-  //     console.log('centerLatLon');
-  //     this.flyTo(latLon);
-  //   },
-  // },
   methods: {
     ...mapMutations({
       setUseLocalTime: 'cruiseView/useLocalTime',
     }),
-    onPathClick() {
-
+    onPathClick({ cruiseName, longitude, latitude }) {
+      this.$router.push({ name: 'cruise-view', params: { cruise: cruiseName, longitude, latitude } });
     },
-    // flyTo({ latitude, longitude }) {
-    //   this.$refs.map.getViewer().camera.flyTo({
-    //     destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 20000.0),
-    //   });
-    //
-    //   if (!this.billboard) {
-    //     this.billboard = this.$refs.map.getViewer().entities.add({
-    //       position: Cesium.Cartesian3.fromDegrees(
-    //         longitude,
-    //         latitude,
-    //       ),
-    //       billboard: {
-    //         image: logoSmall,
-    //         width: 20,
-    //         height: 20,
-    //       },
-    //     });
-    //   } else {
-    //     this.billboard.position = Cesium.Cartesian3.fromDegrees(
-    //       longitude,
-    //       latitude,
-    //     );
-    //   }
-    // },
   },
 
 };

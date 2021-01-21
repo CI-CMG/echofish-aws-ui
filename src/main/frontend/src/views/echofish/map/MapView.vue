@@ -30,14 +30,8 @@ export default {
 
   methods: {
     ...mapActions('mapView', ['getGeoFeatures', 'getMetadata', 'updateViewRect']),
-    // onPathClick({ longitude, latitude, cruiseName }) {
-    // this.$router.push({
-    //   name: 'cruise-view',
-    //   params: { cruiseName },
-    //   query: { longitude, latitude },
-    // });
-    onPathClick() {
-      this.$router.push({ name: 'cruise-view' });
+    onPathClick({ cruiseName, longitude, latitude }) {
+      this.$router.push({ name: 'cruise-view', params: { cruise: cruiseName, longitude, latitude } });
     },
   },
 };

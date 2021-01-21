@@ -32,8 +32,8 @@ const routes = [
             component: MapView,
           },
           {
-            // path: 'cruise/:cruiseName',
-            path: 'cruise',
+            path: 'cruise/:cruise/:longitude/:latitude',
+            props: true,
             name: 'cruise-view',
             component: CruiseView,
           },
