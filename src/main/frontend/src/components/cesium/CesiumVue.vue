@@ -13,15 +13,25 @@ const MAX_CLICKABLE_HEIGHT = 150000;
 export default {
   props: {
     geoJson: Object,
-    viewRect: Object,
+    viewRect: {
+      type: Object,
+      required: false,
+    },
     getGeoFeatures: Function,
-    updateViewRect: Function,
+    updateViewRect: {
+      type: Function,
+      required: false,
+    },
     onPathClick: Function,
     maximumZoomDistance: Number,
-    initialLongitude: Number,
-    initialLatitude: Number,
-    initialHeight: Number,
     cruiseName: String,
+    longitude: Number,
+    latitude: Number,
+    height: Number,
+    billboard: {
+      type: Object,
+      required: false,
+    },
   },
   methods: {
     getViewer() {
@@ -30,7 +40,7 @@ export default {
     getGeoFeaturesForRect({ rect, oldRect, cruiseName }) {
       if (this.cruiseName) {
         this.getGeoFeatures({ type: 'echofish_cruise_path', cruiseName });
-      } else {
+      } else if (rect) {
         const {
           west, south, east, north,
         } = rect;
@@ -150,8 +160,45 @@ export default {
         this.box.label.show = false;
       }
     },
+    flyTo({ latitude, longitude, height }) {
+      this.viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, height),
+      });
+    },
+    setBillboard(billboard) {
+      const entities = this.viewer.entities.values;
+      const billboards = entities.filter((entity) => !!entity.billboard);
+      billboards.forEach((entity) => {
+        this.viewer.entities.remove(entity);
+      });
+
+      if (billboard) {
+        this.viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(
+            billboard.longitude,
+            billboard.latitude,
+          ),
+          billboard: billboard.billboard,
+        });
+      }
+    },
+  },
+  computed: {
+    position() {
+      return {
+        latitude: this.latitude,
+        longitude: this.longitude,
+        height: this.height,
+      };
+    },
   },
   watch: {
+    billboard(billboard) {
+      this.setBillboard(billboard);
+    },
+    position(pos) {
+      this.flyTo(pos);
+    },
     cruiseName(cn) {
       this.getGeoFeaturesForRect({ cruiseName: cn });
     },
@@ -275,9 +322,11 @@ export default {
 
     camera.moveEnd.addEventListener(this.handleCameraMoved);
     camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(this.initialLongitude, this.initialLatitude, this.initialHeight),
+      destination: Cesium.Cartesian3.fromDegrees(this.longitude, this.latitude, this.height),
     });
     this.getGeoFeaturesForRect({ cruiseName: this.cruiseName, rect: this.viewRect });
+    this.setBillboard(this.billboard);
+    this.flyTo(this.position);
   },
 };
 </script>

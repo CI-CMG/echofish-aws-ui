@@ -1,9 +1,9 @@
 <template>
   <div class="map-view">
     <cesium-vue
-      :initial-longitude="-105.2705"
-      :initial-latitude="40.0150"
-      :initial-height="20000000"
+      :longitude="-105.2705"
+      :latitude="40.0150"
+      :height="20000000"
       :maximum-zoom-distance="25000000"
       :geo-json="geoJson"
       :view-rect="viewRect"

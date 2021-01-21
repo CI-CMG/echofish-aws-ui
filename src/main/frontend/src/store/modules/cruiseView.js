@@ -102,8 +102,8 @@ const defaultState = (state = {}) => {
   state.selectedDepthMeters = null;
   state.selectedDateTime = '';
   state.selectedTimezone = '';
-  state.centerLat = null;
-  state.centerLon = null;
+  state.centerLat = 0;
+  state.centerLon = 0;
   state.centerTimestampMillis = null;
   state.center = [-250, 6000];
   state.zoom = 0;
