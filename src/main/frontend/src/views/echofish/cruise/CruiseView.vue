@@ -2,7 +2,7 @@
   <b-container fluid class="pr-0 pl-0">
     <b-row no-gutters style="height: 30px;">
       <b-col style="background-color: green; ">
-        <Header/>
+        <Header :cruise="cruise"/>
       </b-col>
     </b-row>
     <b-row no-gutters style="background-color: blue; height: 100vh;
@@ -15,20 +15,7 @@
         <InfoPanel/>
       </b-col>
       <b-col  style="background-color: teal;">
-        <l-map
-          ref="map"
-          :crs="crs"
-          :zoom="zoom"
-          :minZoom="minZoom"
-          :maxZoom="maxZoom"
-          :maxBounds="maxBounds"
-          :center="center"
-          @click="addMarker"
-        >
-          <l-tile-layer
-            :url="url"
-          />
-        </l-map>
+        <Echogram :cruise="cruise" />
       </b-col>
     </b-row>
     <b-row no-gutters style="height: 30px;">
@@ -37,98 +24,25 @@
       </b-col>
     </b-row>
   </b-container>
-  <!--  <div class="cruiseView">-->
-  <!--    <div class="cruiseViewHeader"></div>-->
-  <!--&lt;!&ndash;    <div class="cruiseViewContent">&ndash;&gt;-->
-  <!--      <b-container fluid class="cruiseViewContent pr-0 pl-0">-->
-  <!--        <b-row no-gutters >-->
-  <!--          <b-col xs="2"  class="cruiseViewInfoPanel">-->
-  <!--&lt;!&ndash;            <div class="cruiseViewInfoPanel"></div>&ndash;&gt;-->
-  <!--            Info-->
-  <!--          </b-col>-->
-  <!--          <b-col class="cruiseViewEchogram">-->
-  <!--&lt;!&ndash;            <div class="cruiseViewEchogram">&ndash;&gt;-->
-  <!--              <l-map-->
-  <!--                ref="map"-->
-  <!--                :crs="crs"-->
-  <!--                :zoom="zoom"-->
-  <!--                :minZoom="minZoom"-->
-  <!--                :maxZoom="maxZoom"-->
-  <!--                :maxBounds="maxBounds"-->
-  <!--                :center="center"-->
-  <!--                @click="addMarker"-->
-  <!--                class="cruiseViewEchogramLeaflet"-->
-  <!--              >-->
-  <!--                <l-tile-layer-->
-  <!--                  :url="url"-->
-  <!--                />-->
-  <!--                <l-control-scale position="bottomleft" :imperial="false" :metric="true"></l-control-scale>-->
-  <!--              </l-map>-->
-  <!--&lt;!&ndash;            </div>&ndash;&gt;-->
-  <!--          </b-col>-->
-  <!--        </b-row>-->
-  <!--      </b-container>-->
-
-  <!--&lt;!&ndash;    </div>&ndash;&gt;-->
-
-  <!--    <div class="cruiseViewFooter"></div>-->
-  <!--    &lt;!&ndash;    <div id='coordinatesValue'><p>{{ coordinatesValue }}</p></div>&ndash;&gt;-->
-
-  <!--    &lt;!&ndash;    <div class="mapscroll" ref="cs" />&ndash;&gt;-->
-
-  <!--    &lt;!&ndash;    <div id="mapWrapper">&ndash;&gt;-->
-  <!--    &lt;!&ndash;      <cesium-vue&ndash;&gt;-->
-  <!--    &lt;!&ndash;        ref="map"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :initial-longitude="67.89"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :initial-latitude="123.45"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :initial-height="20000.0"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :maximum-zoom-distance="25000000"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :geo-json="geoJson"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :cruise-name="cruiseName"&ndash;&gt;-->
-  <!--    &lt;!&ndash;        :on-path-click="onPathClick"&ndash;&gt;-->
-  <!--    &lt;!&ndash;      />&ndash;&gt;-->
-  <!--    &lt;!&ndash;    </div>&ndash;&gt;-->
-
-  <!--    &lt;!&ndash;    <WaterColumnDashboard />&ndash;&gt;-->
-
-  <!--  </div>-->
 </template>
 
 <script>
-import { LMap, LTileLayer } from 'vue2-leaflet';
-import { CRS } from 'leaflet';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
 import InfoPanel from './InfoPanel.vue';
+import Echogram from './Echogram.vue';
 
 export default {
   components: {
     Header,
     Footer,
     InfoPanel,
-    LMap,
-    LTileLayer,
+    Echogram,
   },
   data() {
     return {
-      url: 'https://cires.s3-us-west-2.amazonaws.com/tiles38/{z}_{x}_{y}.png',
-      zoom: 0,
-      minZoom: 0,
-      maxZoom: 2,
-      maxBounds: [[-500, 0], [0, 26000]],
-      center: [-250, 6000],
-      crs: CRS.Simple,
-      coordinatesValue: '',
+      cruise: 'GU1002',
     };
-  },
-  methods: {
-    addMarker(event) {
-      const coordinates = event.latlng;
-      console.log(coordinates);
-      // // this.coordinateValue = 'X: ' + coordinates.lng + ' Y: ' + coordinates.lat;
-      // this.coordinatesVaue = `X: ${coordinates.lng} Y: ${coordinates.lat}`;
-      // console.log(this.coordinatesVaue);
-    },
   },
 };
 </script>

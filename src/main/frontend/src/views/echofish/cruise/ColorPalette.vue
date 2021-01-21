@@ -12,11 +12,10 @@
           :x="index * width / palette.length"
           y="0"
           :style="`fill: ${color};`"
-          @click="() => showValue(index)"
         />
       </svg>
       <b-popover v-for="(color, index) in palette" :key="index" :target="`${id}-${index}`" triggers="click blur" placement="top">
-        {{colorValueArray[index]}}
+        {{popupRange(index)}}
       </b-popover>
     </span>
   </div>
@@ -24,8 +23,6 @@
 
 <script>
 import * as d3 from 'd3';
-// import { range } from 'd3-array';
-// import { scaleOrdinal } from 'd3-scale';
 import { colorPalettes } from './WaterColumnColors';
 import idGen from '../../../idGenerator';
 
@@ -58,12 +55,11 @@ export default {
     },
   },
   methods: {
-    // colorScaleFunction(d) {
-    //   const values = scaleOrdinal().domain(this.colorValueArray).range(this.palette);
-    //   const value = scaleOrdinal().domain(this.colorValueArray).range(this.palette)(d);
-    //   console.log(values);
-    //   return value;
-    // },
+    popupRange(index) {
+      const min = this.colorValueArray[index];
+      const max = index === this.colorValueArray.length - 1 ? this.max : this.colorValueArray[index + 1];
+      return `${min.toFixed(2)} to ${max.toFixed(2)}`;
+    },
   },
 };
 </script>

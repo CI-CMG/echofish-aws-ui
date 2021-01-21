@@ -1,23 +1,28 @@
 <template>
   <span>
-   <ColorPalette selected-color-palette="viridis" :min="-80" :max="-35"/>
+   <ColorPalette :selectedColorPalette="selectedColorPalette" :min="min" :max="max"/>
   </span>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import ColorPalette from './ColorPalette.vue';
 
 export default {
   components: {
     ColorPalette,
   },
-  data() {
-    return {
-      lat: 0.0,
-      lon: 0.0,
-      depth: 0.0,
-      time: '2021-01-20T15:22:09+00:00',
-    };
+  computed: {
+    ...mapGetters({
+      sliderValues: 'cruiseView/sliderValues',
+      selectedColorPalette: 'cruiseView/selectedColorPalette',
+    }),
+    min() {
+      return this.sliderValues[0];
+    },
+    max() {
+      return this.sliderValues[1];
+    },
   },
 };
 </script>
