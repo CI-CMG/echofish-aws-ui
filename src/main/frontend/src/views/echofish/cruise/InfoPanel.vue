@@ -3,8 +3,8 @@
     <div style="width: 100%; height: 150px;">
       <CesiumVue
         ref="map"
-        :longitude="lon"
-        :latitude="lat"
+        :longitude="centerLon"
+        :latitude="centerLat"
         :height="20000.0"
         :maximum-zoom-distance="25000000"
         :on-path-click="onPathClick"
@@ -31,10 +31,6 @@ import logoSmall from '@/assets/blue_small.png';
 import { mapMutations, mapGetters } from 'vuex';
 
 export default {
-  props: [
-    'lon',
-    'lat',
-  ],
   components: {
     CesiumVue,
   },
@@ -50,6 +46,8 @@ export default {
       selectedTimestampMillis: 'cruiseView/selectedTimestampMillis',
       selectedDepthMeters: 'cruiseView/selectedDepthMeters',
       selectedDateTime: 'cruiseView/selectedDateTime',
+      centerLat: 'cruiseView/centerLat',
+      centerLon: 'cruiseView/centerLon',
     }),
     useLocalTime: {
       get() {
@@ -61,8 +59,8 @@ export default {
     },
     billboard() {
       return {
-        latitude: this.lat,
-        longitude: this.lon,
+        latitude: this.centerLat,
+        longitude: this.centerLon,
         billboard: {
           image: logoSmall,
           width: 20,
@@ -74,9 +72,11 @@ export default {
   methods: {
     ...mapMutations({
       setUseLocalTime: 'cruiseView/useLocalTime',
+      prepareCruiseView: 'cruiseView/prepareCruiseView',
     }),
     onPathClick({ cruiseName, longitude, latitude }) {
-      this.$router.push({ name: 'cruise-view', params: { cruise: cruiseName, longitude, latitude } });
+      this.prepareCruiseView({ lat: latitude, lon: longitude, cruise: cruiseName })
+        .then(({ storeIndex, frequency, cruise }) => this.$router.push({ name: 'cruise-view', params: { cruise, storeIndex, frequency } }));
     },
   },
 

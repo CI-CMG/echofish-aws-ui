@@ -29,9 +29,6 @@ export default {
   components: {
     vueSlider,
   },
-  props: [
-    'cruise',
-  ],
   computed: {
     ...mapGetters({
       frequencies: 'cruiseView/frequencies',
@@ -39,6 +36,7 @@ export default {
       storeSliderValues: 'cruiseView/sliderValues',
       selectedColorPalette: 'cruiseView/selectedColorPalette',
       storeIndex: 'cruiseView/storeIndex',
+      cruise: 'cruiseView/cruise',
     }),
     sliderValues: {
       get() {
@@ -51,10 +49,13 @@ export default {
   },
   methods: {
     ...mapMutations({
-      setSelectedFrequency: 'cruiseView/selectedFrequency',
+      // setSelectedFrequency: 'cruiseView/selectedFrequency',
       setSliderValues: 'cruiseView/sliderValues',
       setSelectedColorPalette: 'cruiseView/selectedColorPalette',
     }),
+    setSelectedFrequency(frequency) {
+      this.$router.push({ name: 'cruise-view', params: { cruise: this.cruise, frequency, storeIndex: this.storeIndex } });
+    },
   },
   data() {
     return {

@@ -2,7 +2,7 @@
   <b-container fluid class="pr-0 pl-0">
     <b-row no-gutters style="height: 30px;">
       <b-col style="background-color: green; ">
-        <Header :cruise="cruise"/>
+        <Header />
       </b-col>
     </b-row>
     <b-row no-gutters style="background-color: blue; height: 100vh;
@@ -12,10 +12,10 @@
     padding-bottom: 30px;
 ">
       <b-col sm="3" xl="2" style="background-color: orange;">
-        <InfoPanel :lon="lon" :lat="lat"/>
+        <InfoPanel />
       </b-col>
       <b-col  style="background-color: teal;">
-        <Echogram :cruise="cruise" :onMoveEchogram="onMoveEchogram"/>
+        <Echogram :onMoveEchogram="onMoveEchogram"/>
       </b-col>
     </b-row>
     <b-row no-gutters style="height: 30px;">
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { mapMutations, mapActions, mapGetters } from 'vuex';
+import { mapMutations, mapActions } from 'vuex';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
 import InfoPanel from './InfoPanel.vue';
@@ -42,37 +42,37 @@ export default {
   },
   props: [
     'cruise',
-    'longitude',
-    'latitude',
+    'storeIndex',
+    'frequency',
   ],
   computed: {
-    ...mapGetters({
-      storeIndex: 'cruiseView/storeIndex',
-    }),
-    lon() {
-      return parseFloat(this.longitude);
+    // ...mapGetters({
+    //   storeIndex: 'cruiseView/storeIndex',
+    // }),
+    freq() {
+      return parseInt(this.frequency, 10);
     },
-    lat() {
-      return parseFloat(this.latitude);
+    index() {
+      return parseInt(this.storeIndex, 10);
     },
-    latLonCruise() {
+    storeState() {
       return {
-        lat: this.lat,
-        lon: this.lon,
+        frequency: this.freq,
+        storeIndex: this.index,
         cruise: this.cruise,
       };
     },
   },
   mounted() {
-    this.updateStoreIndex({
-      lat: this.lat,
-      lon: this.lon,
+    this.prepareCruiseView({
+      frequency: this.freq,
+      storeIndex: this.index,
       cruise: this.cruise,
     });
   },
   watch: {
-    latLonCruise(value) {
-      this.updateStoreIndex(value);
+    storeState(value) {
+      this.prepareCruiseView(value);
     },
   },
   methods: {
@@ -81,11 +81,12 @@ export default {
       storeOnMoveEchogram: 'cruiseView/onMoveEchogram',
     }),
     ...mapActions({
-      updateStoreIndex: 'cruiseView/updateStoreIndex',
+      prepareCruiseView: 'cruiseView/prepareCruiseView',
     }),
-    onMoveEchogram(move) {
-      this.storeOnMoveEchogram(move);
-      this.$router.push({ name: 'cruise-view', params: { cruise: this.cruise, longitude: move.lon, latitude: move.lat } });
+    onMoveEchogram(index) {
+      this.$router.push({ name: 'cruise-view', params: { cruise: this.cruise, frequency: this.freq, storeIndex: index } });
+      // this.prepareCruiseView({ storeIndex: index, frequency: this.freq, cruise: this.cruise })
+      //   .then(({ storeIndex, frequency, cruise }) => this.$router.push({ name: 'cruise-view', params: { cruise, frequency, storeIndex } }));
     },
   },
 };

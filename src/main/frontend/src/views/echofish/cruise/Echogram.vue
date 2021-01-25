@@ -25,7 +25,6 @@ import { LMap, LTileLayer } from 'vue2-leaflet';
 
 export default {
   props: [
-    'cruise',
     'onMoveEchogram',
   ],
   components: {
@@ -36,7 +35,8 @@ export default {
     ...mapGetters({
       mockCenter: 'cruiseView/center',
       zoom: 'cruiseView/zoom',
-      storeIndex: 'cruiseView/zoom',
+      storeIndex: 'cruiseView/storeIndex',
+      cruise: 'cruiseView/cruise',
     }),
     center() {
       // TODO convert storeIndex to center
@@ -48,7 +48,6 @@ export default {
   methods: {
     ...mapMutations({
       onSelectPoint: 'cruiseView/onSelectPoint',
-      // onMoveEchogram: 'cruiseView/onMoveEchogram',
       setCenter: 'cruiseView/center',
       setZoom: 'cruiseView/zoom',
     }),
@@ -65,22 +64,14 @@ export default {
     onZoom(zoom) {
       console.log(zoom);
       this.setZoom(zoom);
-      const epochMillis = Math.floor(Math.random() * 1611184676926) + 1;
-      this.onMoveEchogram({
-        lat: Math.floor(Math.random() * 181) - 90,
-        lon: Math.floor(Math.random() * 361) - 180,
-        epochMillis,
-      });
+      // TODO implement me for real
+      this.onMoveEchogram(this.storeIndex + 100);
     },
     onCenter(center) {
       console.log(center);
       this.setCenter(center);
-      const epochMillis = Math.floor(Math.random() * 1611184676926) + 1;
-      this.onMoveEchogram({
-        lat: Math.floor(Math.random() * 181) - 90,
-        lon: Math.floor(Math.random() * 361) - 180,
-        epochMillis,
-      });
+      // TODO implement me for real
+      this.onMoveEchogram(this.storeIndex + 100);
     },
     boundsUpdated(bounds) {
       console.log(bounds);

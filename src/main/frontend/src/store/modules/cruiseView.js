@@ -64,7 +64,9 @@ const getDateTime = (epochMillis, timezone) => {
   return localTime;
 };
 
-const estimateDistance = (lon1, lat1, lon2, lat2) => Math.sqrt((lon2 - lon1) ** 2 + (lat2 - lat1) ** 2);
+const estimateDistance = (lon1, lat1, lon2, lat2) => Math.sqrt(
+  (lon2 - lon1) ** 2 + (lat2 - lat1) ** 2,
+);
 
 const findNearestIndex = (lon, lat, geoHashList) => {
   let minDistance = null;
@@ -79,6 +81,17 @@ const findNearestIndex = (lon, lat, geoHashList) => {
   }
   return minIndex;
 };
+
+// TODO call zarr API and return promise
+// eslint-disable-next-line no-unused-vars
+const getFrequencies = (cruise) => Promise.resolve([18000, 38000, 120000, 200000]);
+
+// TODO call zarr API and return promise
+// eslint-disable-next-line no-unused-vars
+const getCenterLatLon = (cruise, storeIndex) => Promise.resolve({
+  lat: Math.floor(Math.random() * 181) - 90,
+  lon: Math.floor(Math.random() * 361) - 180,
+});
 
 const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTime) => {
   state.selectedLat = lat;
@@ -101,9 +114,8 @@ const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTim
 
 const defaultState = (state = {}) => {
   state.cruise = '';
-  // TODO load frequencies from zarr
-  state.selectedFrequency = 18000;
-  state.frequencies = [18000, 38000, 120000, 200000];
+  state.selectedFrequency = -1;
+  state.frequencies = [];
   state.sliderValues = [-80, -35];
   state.selectedColorPalette = defaultColorPalette;
   state.useLocalTime = false;
@@ -119,7 +131,7 @@ const defaultState = (state = {}) => {
   state.selectedTimezone = '';
   state.centerLat = 0;
   state.centerLon = 0;
-  state.centerTimestampMillis = null;
+  // state.centerTimestampMillis = null;
   state.center = [-250, 6000];
   state.zoom = 0;
   state.geoHash = '';
@@ -191,9 +203,9 @@ export default {
     centerLon(state) {
       return state.centerLon;
     },
-    centerTimestampMillis(state) {
-      return state.centerTimestampMillis;
-    },
+    // centerTimestampMillis(state) {
+    //   return state.centerTimestampMillis;
+    // },
     center(state) {
       return state.center;
     },
@@ -228,13 +240,14 @@ export default {
     },
     useLocalTime(state, useLocalTime) {
       state.useLocalTime = useLocalTime;
-      updateTimeFields(state, state.selectedLat, state.selectedLon, state.selectedTimestampMillis, state.selectedDepthMeters, state.useLocalTime);
+      updateTimeFields(state, state.selectedLat, state.selectedLon, state.selectedTimestampMillis,
+        state.selectedDepthMeters, state.useLocalTime);
     },
-    onMoveEchogram(state, { lat, lon, epochMillis }) {
-      state.centerLat = lat;
-      state.centerLon = lon;
-      state.centerTimestampMillis = epochMillis;
-    },
+    // onMoveEchogram(state, { lat, lon, epochMillis }) {
+    //   state.centerLat = lat;
+    //   state.centerLon = lon;
+    //   state.centerTimestampMillis = epochMillis;
+    // },
     onSelectPoint(state, {
       lat, lon, epochMillis, depthMeters,
     }) {
@@ -246,19 +259,75 @@ export default {
     zoom(state, zoom) {
       state.zoom = zoom;
     },
+    centerLat(state, centerLat) {
+      state.centerLat = centerLat;
+    },
+    centerLon(state, centerLon) {
+      state.centerLon = centerLon;
+    },
   },
   actions: {
-    updateStoreIndex({ commit }, { lat, lon, cruise }) {
-      commit('cruise', cruise);
-      const geoHash = Geohash.encode(lat, lon, 5);
-      commit('geoHash', geoHash);
-      geoHashApi.get(`/${cruise}/${geoHash}.json`).then(({ data }) => {
-        commit('storeIndex', findNearestIndex(lon, lat, data));
-      },
-      () => {
-        // TODO check neighbors?
-        commit('storeIndex', -1);
-      });
+    prepareCruiseView({ commit }, c) {
+      // { lat, lon, cruise, storeIndex, frequency}
+
+      return Promise.resolve(c)
+        .then((context) => {
+          commit('cruise', context.cruise);
+          return context;
+        })
+        .then((context) => {
+          if (context.storeIndex != null && context.storeIndex > -1) {
+            commit('storeIndex', context.storeIndex);
+            return context;
+          }
+          const geoHash = Geohash.encode(context.lat, context.lon, 5);
+          return geoHashApi.get(`/${context.cruise}/${geoHash}.json`)
+            .then(({ data }) => {
+              const storeIndex = findNearestIndex(context.lon, context.lat, data);
+              commit('storeIndex', storeIndex);
+              context.storeIndex = storeIndex;
+              return context;
+            },
+            () => {
+            // TODO check neighbors?
+              commit('storeIndex', -1);
+            });
+        })
+        .then((context) => {
+          // TODO optimize this.  Frequencies do not need to be retreived every time.
+          console.log(context);
+          return getFrequencies().then((frequencies) => {
+            commit('frequencies', frequencies);
+            const frequency = frequencies[0];
+            commit('selectedFrequency', frequency);
+            context.frequency = frequency;
+            return context;
+          });
+        })
+        .then((context) => getCenterLatLon(context.cruise, context.storeIndex)
+          .then(({ lat, lon }) => {
+            commit('centerLat', lat);
+            commit('centerLon', lon);
+            return context;
+          }));
     },
+    // updateStoreIndex({ commit }, {
+    //   lat, lon, cruise, storeIndex,
+    // }) {
+    //   commit('cruise', cruise);
+    //   const geoHash = Geohash.encode(lat, lon, 5);
+    //   commit('geoHash', geoHash);
+    //   if (storeIndex && storeIndex >= 0) {
+    //     commit('storeIndex', storeIndex);
+    //   } else {
+    //     geoHashApi.get(`/${cruise}/${geoHash}.json`).then(({ data }) => {
+    //       commit('storeIndex', findNearestIndex(lon, lat, data));
+    //     },
+    //     () => {
+    //       // TODO check neighbors?
+    //       commit('storeIndex', -1);
+    //     });
+    //   }
+    // },
   },
 };

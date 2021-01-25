@@ -29,7 +29,10 @@ export default {
   },
 
   methods: {
-    ...mapActions('mapView', ['getMetadata']),
+    ...mapActions({
+      getMetadata: 'mapView/getMetadata',
+      prepareCruiseView: 'cruiseView/prepareCruiseView',
+    }),
     updateViewRect() {
 
     },
@@ -37,7 +40,8 @@ export default {
 
     },
     onPathClick({ cruiseName, longitude, latitude }) {
-      this.$router.push({ name: 'cruise-view', params: { cruise: cruiseName, longitude, latitude } });
+      this.prepareCruiseView({ lat: latitude, lon: longitude, cruise: cruiseName })
+        .then(({ storeIndex, frequency, cruise }) => this.$router.push({ name: 'cruise-view', params: { cruise, storeIndex, frequency } }));
     },
   },
 };
