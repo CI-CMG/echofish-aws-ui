@@ -13,7 +13,7 @@ module.exports = {
         return args;
       });
   },
-  publicPath: process.env.NODE_ENV === 'production' ? '@contextRoot@' : '/',
+  publicPath: '/',
   devServer: {
     hotOnly: true,
     https: true,
