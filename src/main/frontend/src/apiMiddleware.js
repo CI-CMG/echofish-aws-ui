@@ -1,5 +1,7 @@
 import store from '@/store/store';
 import api from '@/api';
+import geoHashApi from './api/geoHashApi';
+import zarrApi from './api/zarrApi';
 
 // eslint-disable-next-line no-unused-vars
 export const register = (router) => {
@@ -21,6 +23,32 @@ export const register = (router) => {
         }
         store.dispatch('app/addErrors', msg);
       }
+      throw error;
+    },
+  );
+
+  geoHashApi.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      let msg = ['An Unknown Error Occurred'];
+      if (error.response && error.response.data && error.response.data.flashErrors) {
+        msg = error.response.data.flashErrors;
+      }
+      store.dispatch('app/addErrors', msg);
+
+      throw error;
+    },
+  );
+
+  zarrApi.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      let msg = ['An Unknown Error Occurred'];
+      if (error.response && error.response.data && error.response.data.flashErrors) {
+        msg = error.response.data.flashErrors;
+      }
+      store.dispatch('app/addErrors', msg);
+
       throw error;
     },
   );

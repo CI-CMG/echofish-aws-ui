@@ -2,7 +2,9 @@ import SunCalc from 'suncalc';
 import moment from 'moment-timezone';
 import { scaleThreshold } from 'd3-scale';
 import tzlookup from 'tz-lookup';
+import Geohash from 'latlon-geohash';
 import { defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
+import geoHashApi from '../../api/geoHashApi';
 
 const moonPhaseLookup = (value) => scaleThreshold()
   .domain([0.01, 0.25, 0.26, 0.50, 0.51, 0.75, 0.76])
@@ -62,6 +64,22 @@ const getDateTime = (epochMillis, timezone) => {
   return localTime;
 };
 
+const estimateDistance = (lon1, lat1, lon2, lat2) => Math.sqrt((lon2 - lon1) ** 2 + (lat2 - lat1) ** 2);
+
+const findNearestIndex = (lon, lat, geoHashList) => {
+  let minDistance = null;
+  let minIndex = -1;
+  for (let i = 0; i < geoHashList.length; i += 1) {
+    const [index, lon2, lat2] = geoHashList[i];
+    const distance = estimateDistance(lon, lat, lon2, lat2);
+    if (minDistance == null || distance < minDistance) {
+      minDistance = distance;
+      minIndex = index;
+    }
+  }
+  return minIndex;
+};
+
 const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTime) => {
   state.selectedLat = lat;
   state.selectedLon = lon;
@@ -82,8 +100,10 @@ const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTim
 };
 
 const defaultState = (state = {}) => {
-  state.selectedFrequency = '18 kHz';
-  state.frequencies = ['18 kHz', '38 kHz', '120 kHz', '200 kHz'];
+  state.cruise = '';
+  // TODO load frequencies from zarr
+  state.selectedFrequency = 18000;
+  state.frequencies = [18000, 38000, 120000, 200000];
   state.sliderValues = [-80, -35];
   state.selectedColorPalette = defaultColorPalette;
   state.useLocalTime = false;
@@ -102,6 +122,8 @@ const defaultState = (state = {}) => {
   state.centerTimestampMillis = null;
   state.center = [-250, 6000];
   state.zoom = 0;
+  state.geoHash = '';
+  state.storeIndex = -1;
   return state;
 };
 
@@ -109,6 +131,15 @@ export default {
   namespaced: true,
   state: defaultState(),
   getters: {
+    cruise(state) {
+      return state.cruise;
+    },
+    geoHash(state) {
+      return state.geoHash;
+    },
+    storeIndex(state) {
+      return state.storeIndex;
+    },
     selectedFrequency(state) {
       return state.selectedFrequency;
     },
@@ -171,6 +202,15 @@ export default {
     },
   },
   mutations: {
+    cruise(state, cruise) {
+      state.cruise = cruise;
+    },
+    geoHash(state, geoHash) {
+      state.geoHash = geoHash;
+    },
+    storeIndex(state, storeIndex) {
+      state.storeIndex = storeIndex;
+    },
     reset(state) {
       defaultState(state);
     },
@@ -208,6 +248,17 @@ export default {
     },
   },
   actions: {
-
+    updateStoreIndex({ commit }, { lat, lon, cruise }) {
+      commit('cruise', cruise);
+      const geoHash = Geohash.encode(lat, lon, 5);
+      commit('geoHash', geoHash);
+      geoHashApi.get(`/${cruise}/${geoHash}.json`).then(({ data }) => {
+        commit('storeIndex', findNearestIndex(lon, lat, data));
+      },
+      () => {
+        // TODO check neighbors?
+        commit('storeIndex', -1);
+      });
+    },
   },
 };

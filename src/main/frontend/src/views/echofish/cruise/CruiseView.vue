@@ -15,7 +15,7 @@
         <InfoPanel :lon="lon" :lat="lat"/>
       </b-col>
       <b-col  style="background-color: teal;">
-        <Echogram :cruise="cruise" :lon="lon" :lat="lat" :onMoveEchogram="onMoveEchogram"/>
+        <Echogram :cruise="cruise" :onMoveEchogram="onMoveEchogram"/>
       </b-col>
     </b-row>
     <b-row no-gutters style="height: 30px;">
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import { mapMutations, mapActions, mapGetters } from 'vuex';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
 import InfoPanel from './InfoPanel.vue';
@@ -46,19 +46,42 @@ export default {
     'latitude',
   ],
   computed: {
+    ...mapGetters({
+      storeIndex: 'cruiseView/storeIndex',
+    }),
     lon() {
       return parseFloat(this.longitude);
     },
     lat() {
       return parseFloat(this.latitude);
     },
+    latLonCruise() {
+      return {
+        lat: this.lat,
+        lon: this.lon,
+        cruise: this.cruise,
+      };
+    },
+  },
+  mounted() {
+    this.updateStoreIndex({
+      lat: this.lat,
+      lon: this.lon,
+      cruise: this.cruise,
+    });
+  },
+  watch: {
+    latLonCruise(value) {
+      this.updateStoreIndex(value);
+    },
   },
   methods: {
     ...mapMutations({
       onSelectPoint: 'cruiseView/onSelectPoint',
       storeOnMoveEchogram: 'cruiseView/onMoveEchogram',
-      setCenter: 'cruiseView/center',
-      setZoom: 'cruiseView/zoom',
+    }),
+    ...mapActions({
+      updateStoreIndex: 'cruiseView/updateStoreIndex',
     }),
     onMoveEchogram(move) {
       this.storeOnMoveEchogram(move);

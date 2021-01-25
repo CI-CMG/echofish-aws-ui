@@ -1,8 +1,10 @@
 <template>
 
   <span>
-    <span>{{ cruise }}</span>
-    <b-dropdown :text="selectedFrequency">
+    <span class="mr-2 ml-2">{{ cruise }}</span>
+<!--    TODO remove me-->
+    <span class="mr-2">{{ storeIndex }}</span>
+    <b-dropdown :text="`${selectedFrequency}`">
       <b-dropdown-item v-for="frequency in frequencies" :key="frequency" @click="() => setSelectedFrequency(frequency)">{{frequency}}</b-dropdown-item>
     </b-dropdown>
     <b-dropdown :text="selectedColorPalette">
@@ -36,6 +38,7 @@ export default {
       selectedFrequency: 'cruiseView/selectedFrequency',
       storeSliderValues: 'cruiseView/sliderValues',
       selectedColorPalette: 'cruiseView/selectedColorPalette',
+      storeIndex: 'cruiseView/storeIndex',
     }),
     sliderValues: {
       get() {

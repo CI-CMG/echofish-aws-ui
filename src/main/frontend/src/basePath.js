@@ -4,6 +4,8 @@ const trimTrailingSlashes = (path) => (path.trim().replace(/\/+$/, ''));
 
 export const API_BASE_PATH = `${trimTrailingSlashes(window.apiBasePath)}/v1`;
 export const MVT_BASE_PATH = trimTrailingSlashes(window.mvtBasePath);
+export const GEO_HASH_BASE_PATH = trimTrailingSlashes(window.geoHashBasePath);
+export const ZARR_BASE_PATH = trimTrailingSlashes(window.zarrBasePath);
 
 // export const RAW_BASE_PATH = __webpack_public_path__;
 // export const RAW_MVT_BASE_PATH = window.mvtBasePath;

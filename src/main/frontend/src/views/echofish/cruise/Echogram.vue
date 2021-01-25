@@ -27,8 +27,6 @@ export default {
   props: [
     'cruise',
     'onMoveEchogram',
-    'lat',
-    'lon',
   ],
   components: {
     LMap,
@@ -38,13 +36,12 @@ export default {
     ...mapGetters({
       mockCenter: 'cruiseView/center',
       zoom: 'cruiseView/zoom',
+      storeIndex: 'cruiseView/zoom',
     }),
     center() {
-      // TODO convert lat / lon to center
+      // TODO convert storeIndex to center
       // eslint-disable-next-line no-unused-vars
-      const lat = this.lat;
-      // eslint-disable-next-line no-unused-vars
-      const lon = this.lon;
+      const storeIndex = this.storeIndex;
       return this.mockCenter;
     },
   },

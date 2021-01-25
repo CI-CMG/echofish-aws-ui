@@ -29,7 +29,13 @@ export default {
   },
 
   methods: {
-    ...mapActions('mapView', ['getGeoFeatures', 'getMetadata', 'updateViewRect']),
+    ...mapActions('mapView', ['getMetadata']),
+    updateViewRect() {
+
+    },
+    getGeoFeatures() {
+
+    },
     onPathClick({ cruiseName, longitude, latitude }) {
       this.$router.push({ name: 'cruise-view', params: { cruise: cruiseName, longitude, latitude } });
     },
