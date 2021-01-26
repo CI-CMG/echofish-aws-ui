@@ -3,6 +3,7 @@ import moment from 'moment-timezone';
 import { scaleThreshold } from 'd3-scale';
 import tzlookup from 'tz-lookup';
 import Geohash from 'latlon-geohash';
+import { openArray, slice } from 'zarr';
 import { defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
 import geoHashApi from '../../api/geoHashApi';
 
@@ -12,6 +13,9 @@ const moonPhaseLookup = (value) => scaleThreshold()
     'New Moon 🌑', 'Waxing Crescent 🌒', 'First Quarter 🌓', 'Waxing Gibbous 🌔',
     'Full Moon 🌕', 'Waning Gibbous 🌖', 'Last Quarter 🌗', 'Waning Crescent 🌘',
   ])(value);
+
+// TODO: replace with regular store when fixed
+const s3URL = 'https://cires.s3-us-west-2.amazonaws.com/sh1305_20210121.zarr';
 
 const getAstronomical = (localTime, lat, lon, timezone) => {
   if (!localTime || !lat || !lon || !timezone) {
@@ -82,16 +86,34 @@ const findNearestIndex = (lon, lat, geoHashList) => {
   return minIndex;
 };
 
-// TODO call zarr API and return promise
-// eslint-disable-next-line no-unused-vars
-const getFrequencies = (cruise) => Promise.resolve([18000, 38000, 120000, 200000]);
+function getFrequencies() {
+  return openArray({ store: s3URL, path: 'frequency', mode: 'r' })
+    .then((x) => x)
+    .then((y) => y.get([null]).then((x) => Array.from(x.data)));
+}
 
-// TODO call zarr API and return promise
-// eslint-disable-next-line no-unused-vars
-const getCenterLatLon = (cruise, storeIndex) => Promise.resolve({
-  lat: Math.floor(Math.random() * 181) - 90,
-  lon: Math.floor(Math.random() * 361) - 180,
-});
+// // TODO call zarr API and return promise
+// // eslint-disable-next-line no-unused-vars
+// const getCenterLatLon = (cruise, storeIndex) => Promise.resolve({
+//   lat: Math.floor(Math.random() * 181) - 90,
+//   lon: Math.floor(Math.random() * 361) - 180,
+// });
+
+// TODO: speed up by reading store from __vuex__
+function getCenterLatLon(cruise, storeIndex) {
+  const lat = openArray({ store: s3URL, path: 'latitude', mode: 'r' })
+    .then((x) => x)
+    .then((y) => y.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]));
+
+  const lon = openArray({ store: s3URL, path: 'longitude', mode: 'r' })
+    .then((x) => x)
+    .then((y) => y.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]));
+
+  return Promise.all([lat, lon]).then((x) => {
+    const latlon = { lat: x[0], lon: x[1] };
+    return latlon;
+  });
+}
 
 const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTime) => {
   state.selectedLat = lat;

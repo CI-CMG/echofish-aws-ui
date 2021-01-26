@@ -30,6 +30,5 @@ export default {
       countDown: 'app/countDown',
     }),
   },
-
 };
 </script>
