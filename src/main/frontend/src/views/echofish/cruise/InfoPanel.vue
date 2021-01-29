@@ -29,7 +29,7 @@
 <script>
 import CesiumVue from '@/components/cesium/CesiumVue.vue';
 import logoSmall from '@/assets/blue_small.png';
-import { mapMutations, mapGetters } from 'vuex';
+import { mapMutations, mapGetters, mapActions } from 'vuex';
 
 export default {
   components: {
@@ -73,11 +73,28 @@ export default {
   methods: {
     ...mapMutations({
       setUseLocalTime: 'cruiseView/useLocalTime',
+    }),
+    ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
     }),
     onPathClick({ cruiseName, longitude, latitude }) {
       this.prepareCruiseView({ lat: latitude, lon: longitude, cruise: cruiseName })
-        .then(({ storeIndex, frequency, cruise }) => this.$router.push({ name: 'cruise-view', params: { cruise, storeIndex, frequency } }));
+        .then(({
+          storeIndex, depthIndex, frequency, cruise,
+        }) => this.$router.push({
+          name: 'cruise-view',
+          params: {
+            cruise, storeIndex, depthIndex, frequency,
+          },
+        }).catch((err) => {
+          // Ignore the vuex err regarding  navigating to the page they are already on.
+          if (
+            err.name !== 'NavigationDuplicated'
+            && !err.message.includes('Avoided redundant navigation to current location')
+          ) {
+            throw err;
+          }
+        }));
     },
   },
 

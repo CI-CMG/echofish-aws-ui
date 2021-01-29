@@ -1,27 +1,23 @@
 <template>
-  <l-map
-    ref="map"
+  <l-map v-if="center.length"
     :crs="crs"
-    :zoom="zoom"
     :center="center"
-    @update:zoom="onZoom"
-    @update:center="onCenter"
-    @update:bounds="boundsUpdated"
-    :minZoom="minZoom"
-    :maxZoom="maxZoom"
+    :minZoom="0"
+    :maxZoom="0"
     :maxBounds="maxBounds"
-    @click="addMarker"
-  >
-    <l-tile-layer
-      :url="url"
-    />
+    @click="updateCursor"
+    @update:center="mapCenterUpdated">
+
+    <l-grid-layer :tile-component="TileComponent" :tileSize=512></l-grid-layer>
+
   </l-map>
 </template>
 
 <script>
 import { CRS } from 'leaflet';
 import { mapMutations, mapGetters } from 'vuex';
-import { LMap, LTileLayer } from 'vue2-leaflet';
+import { LMap, LGridLayer } from 'vue2-leaflet';
+import TileComponent from './TileComponent.vue';
 
 export default {
   props: [
@@ -29,29 +25,23 @@ export default {
   ],
   components: {
     LMap,
-    LTileLayer,
+    LGridLayer,
   },
   computed: {
     ...mapGetters({
-      mockCenter: 'cruiseView/center',
-      zoom: 'cruiseView/zoom',
       storeIndex: 'cruiseView/storeIndex',
       cruise: 'cruiseView/cruise',
+      maxBounds: 'cruiseView/maxBounds',
+      center: 'cruiseView/center',
+      selectedFrequency: 'cruiseView/selectedFrequency',
+      zarr: 'cruiseView/zarr',
     }),
-    center() {
-      // TODO convert storeIndex to center
-      // eslint-disable-next-line no-unused-vars
-      const storeIndex = this.storeIndex;
-      return this.mockCenter;
-    },
   },
   methods: {
     ...mapMutations({
       onSelectPoint: 'cruiseView/onSelectPoint',
-      setCenter: 'cruiseView/center',
-      setZoom: 'cruiseView/zoom',
     }),
-    addMarker() {
+    updateCursor() {
       const epochMillis = Math.floor(Math.random() * 1611184676926) + 1;
       const depthMeters = Math.floor(Math.random() * 600);
       this.onSelectPoint({
@@ -61,29 +51,18 @@ export default {
         depthMeters,
       });
     },
-    onZoom(zoom) {
-      console.log(zoom);
-      this.setZoom(zoom);
-      // TODO implement me for real
-      this.onMoveEchogram(this.storeIndex + 100);
-    },
-    onCenter(center) {
-      console.log(center);
-      this.setCenter(center);
-      // TODO implement me for real
-      this.onMoveEchogram(this.storeIndex + 100);
-    },
-    boundsUpdated(bounds) {
-      console.log(bounds);
+    mapCenterUpdated(center) {
+      if (center) {
+        const storeIndex = Math.min(Math.round(center.lng), this.zarr.dataArray.shape[1]);
+        const depthIndex = Math.min(Math.round(-1 * center.lat), this.zarr.dataArray.shape[0]);
+        this.onMoveEchogram({ storeIndex, depthIndex });
+      }
     },
   },
   data() {
     return {
-      url: 'https://cires.s3-us-west-2.amazonaws.com/tiles38/{z}_{x}_{y}.png',
-      minZoom: 0,
-      maxZoom: 2,
-      maxBounds: [[-500, 0], [0, 26000]],
       crs: CRS.Simple,
+      TileComponent,
     };
   },
 };

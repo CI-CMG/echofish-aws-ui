@@ -78,7 +78,6 @@ export default {
       'redraw',
     ]),
     sliderChanged() {
-      console.log('slider changed');
       this.redraw();
     },
   },

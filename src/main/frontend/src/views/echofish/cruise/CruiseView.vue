@@ -43,6 +43,7 @@ export default {
   props: [
     'cruise',
     'storeIndex',
+    'depthIndex',
     'frequency',
   ],
   computed: {
@@ -55,10 +56,14 @@ export default {
     index() {
       return parseInt(this.storeIndex, 10);
     },
+    depth() {
+      return parseInt(this.depthIndex, 10);
+    },
     storeState() {
       return {
         frequency: this.freq,
         storeIndex: this.index,
+        depthIndex: this.depth,
         cruise: this.cruise,
       };
     },
@@ -67,6 +72,7 @@ export default {
     this.prepareCruiseView({
       frequency: this.freq,
       storeIndex: this.index,
+      depthIndex: this.depth,
       cruise: this.cruise,
     });
   },
@@ -83,10 +89,21 @@ export default {
     ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
     }),
-    onMoveEchogram(index) {
-      this.$router.push({ name: 'cruise-view', params: { cruise: this.cruise, frequency: this.freq, storeIndex: index } });
-      // this.prepareCruiseView({ storeIndex: index, frequency: this.freq, cruise: this.cruise })
-      //   .then(({ storeIndex, frequency, cruise }) => this.$router.push({ name: 'cruise-view', params: { cruise, frequency, storeIndex } }));
+    onMoveEchogram({ storeIndex, depthIndex }) {
+      this.$router.push({
+        name: 'cruise-view',
+        params: {
+          cruise: this.cruise, frequency: this.freq, storeIndex, depthIndex,
+        },
+      }).catch((err) => {
+        // Ignore the vuex err regarding  navigating to the page they are already on.
+        if (
+          err.name !== 'NavigationDuplicated'
+          && !err.message.includes('Avoided redundant navigation to current location')
+        ) {
+          throw err;
+        }
+      });
     },
   },
 };

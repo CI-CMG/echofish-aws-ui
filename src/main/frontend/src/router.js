@@ -32,7 +32,7 @@ const routes = [
             component: MapView,
           },
           {
-            path: 'cruise/:cruise/:storeIndex/:frequency',
+            path: 'cruise/:cruise/:storeIndex/:depthIndex/:frequency',
             props: true,
             name: 'cruise-view',
             component: CruiseView,

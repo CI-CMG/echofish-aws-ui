@@ -31,7 +31,6 @@ export default {
       },
       set(value) {
         this.$store.dispatch('cruiseView/updateFrequency', value);
-        console.log(`frequency updated ${value}`);
       },
     },
   },

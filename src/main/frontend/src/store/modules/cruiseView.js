@@ -3,9 +3,10 @@ import moment from 'moment-timezone';
 import { scaleThreshold } from 'd3-scale';
 import tzlookup from 'tz-lookup';
 import Geohash from 'latlon-geohash';
-import { openArray, slice } from 'zarr';
+import { openArray } from 'zarr';
 import { defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
 import geoHashApi from '../../api/geoHashApi';
+import { ZARR_BASE_PATH } from '../../basePath';
 
 const moonPhaseLookup = (value) => scaleThreshold()
   .domain([0.01, 0.25, 0.26, 0.50, 0.51, 0.75, 0.76])
@@ -13,9 +14,6 @@ const moonPhaseLookup = (value) => scaleThreshold()
     'New Moon 🌑', 'Waxing Crescent 🌒', 'First Quarter 🌓', 'Waxing Gibbous 🌔',
     'Full Moon 🌕', 'Waning Gibbous 🌖', 'Last Quarter 🌗', 'Waning Crescent 🌘',
   ])(value);
-
-// TODO: replace with regular store when fixed
-const s3URL = 'https://cires.s3-us-west-2.amazonaws.com/sh1305_20210121.zarr';
 
 const getAstronomical = (localTime, lat, lon, timezone) => {
   if (!localTime || !lat || !lon || !timezone) {
@@ -86,35 +84,6 @@ const findNearestIndex = (lon, lat, geoHashList) => {
   return minIndex;
 };
 
-function getFrequencies() {
-  return openArray({ store: s3URL, path: 'frequency', mode: 'r' })
-    .then((x) => x)
-    .then((y) => y.get([null]).then((x) => Array.from(x.data)));
-}
-
-// // TODO call zarr API and return promise
-// // eslint-disable-next-line no-unused-vars
-// const getCenterLatLon = (cruise, storeIndex) => Promise.resolve({
-//   lat: Math.floor(Math.random() * 181) - 90,
-//   lon: Math.floor(Math.random() * 361) - 180,
-// });
-
-// TODO: speed up by reading store from __vuex__
-function getCenterLatLon(cruise, storeIndex) {
-  const lat = openArray({ store: s3URL, path: 'latitude', mode: 'r' })
-    .then((x) => x)
-    .then((y) => y.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]));
-
-  const lon = openArray({ store: s3URL, path: 'longitude', mode: 'r' })
-    .then((x) => x)
-    .then((y) => y.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]));
-
-  return Promise.all([lat, lon]).then((x) => {
-    const latlon = { lat: x[0], lon: x[1] };
-    return latlon;
-  });
-}
-
 const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTime) => {
   state.selectedLat = lat;
   state.selectedLon = lon;
@@ -135,8 +104,10 @@ const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTim
 };
 
 const defaultState = (state = {}) => {
+  state.loading = false;
   state.cruise = '';
   state.selectedFrequency = -1;
+  state.selectedFrequencyIndex = -1;
   state.frequencies = [];
   state.sliderValues = [-80, -35];
   state.selectedColorPalette = defaultColorPalette;
@@ -153,11 +124,13 @@ const defaultState = (state = {}) => {
   state.selectedTimezone = '';
   state.centerLat = 0;
   state.centerLon = 0;
-  // state.centerTimestampMillis = null;
-  state.center = [-250, 6000];
+  state.center = [];
   state.zoom = 0;
   state.geoHash = '';
+  state.depthIndex = -1;
   state.storeIndex = -1;
+  state.zarr = {};
+  state.maxBounds = [[0, 0], [0, 0]];
   return state;
 };
 
@@ -165,6 +138,18 @@ export default {
   namespaced: true,
   state: defaultState(),
   getters: {
+    depthIndex(state) {
+      return state.depthIndex;
+    },
+    maxBounds(state) {
+      return state.maxBounds;
+    },
+    loading(state) {
+      return state.loading;
+    },
+    zarr(state) {
+      return state.zarr;
+    },
     cruise(state) {
       return state.cruise;
     },
@@ -236,6 +221,18 @@ export default {
     },
   },
   mutations: {
+    depthIndex(state, depthIndex) {
+      state.depthIndex = depthIndex;
+    },
+    maxBounds(state, maxBounds) {
+      state.maxBounds = maxBounds;
+    },
+    loading(state, loading) {
+      state.loading = loading;
+    },
+    zarr(state, zarr) {
+      state.zarr = zarr;
+    },
     cruise(state, cruise) {
       state.cruise = cruise;
     },
@@ -289,67 +286,109 @@ export default {
     },
   },
   actions: {
-    prepareCruiseView({ commit }, c) {
-      // { lat, lon, cruise, storeIndex, frequency}
+    prepareCruiseView({ commit, dispatch, state }, {
+      lat, lon, cruise, storeIndex, depthIndex, frequency,
+    }) {
+      // lat, lon only set from map
+      // storeIndex is only set from echogram
+      // frequency may be null
 
-      return Promise.resolve(c)
-        .then((context) => {
-          commit('cruise', context.cruise);
-          return context;
-        })
-        .then((context) => {
-          if (context.storeIndex != null && context.storeIndex > -1) {
-            commit('storeIndex', context.storeIndex);
-            return context;
+      commit('loading', true);
+      if (cruise !== state.cruise) {
+        commit('cruise', cruise);
+      }
+      if (frequency != null && frequency !== state.frequency) {
+        commit('selectedFrequency', frequency);
+      }
+
+      let zarrPromise;
+      if (cruise === state.zarr.cruise) {
+        zarrPromise = Promise.resolve(state.zarr);
+      } else {
+        const url = `${ZARR_BASE_PATH}/${cruise}.zarr`;
+
+        const frequencyPromise = openArray({ store: url, path: 'frequency', mode: 'r' })
+          .then((frequencyArray) => frequencyArray.get(null).then(({ data }) => {
+            const frequencies = Array.from(data);
+            commit('frequencies', frequencies);
+            if (frequency == null) {
+              commit('selectedFrequency', frequencies.length ? frequencies[0] : -1);
+            }
+            return frequencyArray;
+          },
+          (error) => {
+            dispatch('app/addErrors', ['unable to load frequencies data'], { root: true });
+            throw error;
+          }));
+        const dataPromise = openArray({ store: url, path: 'data', mode: 'r' });
+        const timePromise = openArray({ store: url, path: 'time', mode: 'r' });
+        const latitudePromise = openArray({ store: url, path: 'latitude', mode: 'r' });
+        const longitudePromise = openArray({ store: url, path: 'longitude', mode: 'r' });
+
+        zarrPromise = Promise.all([
+          dataPromise,
+          timePromise,
+          frequencyPromise,
+          latitudePromise,
+          longitudePromise,
+        ]).then(([dataArray, timeArray, frequencyArray, latitudeArray, longitudeArray]) => {
+          const zarr = {
+            cruise, dataArray, timeArray, frequencyArray, latitudeArray, longitudeArray,
+          };
+          commit('maxBounds', [[-1 * dataArray.shape[0], 0], [0, dataArray.shape[1]]]);
+          commit('zarr', zarr);
+          return zarr;
+        },
+        (error) => {
+          dispatch('app/addErrors', ['unable to load echogram data'], { root: true });
+          throw error;
+        });
+      }
+
+      let storeIndexPromise;
+      if (storeIndex != null && storeIndex > -1) {
+        storeIndexPromise = Promise.resolve(storeIndex);
+      } else {
+        const geoHash = Geohash.encode(lat, lon, 5);
+        storeIndexPromise = geoHashApi.get(`/${cruise}/${geoHash}.json`).then(({ data }) => findNearestIndex(lon, lat, data));
+      }
+
+      return Promise.all([zarrPromise, storeIndexPromise])
+        .then(([zarr, index]) => {
+          commit('zarr', zarr);
+          let di;
+          if (depthIndex == null || depthIndex < 0) {
+            di = 0;
+          } else {
+            di = depthIndex;
           }
-          const geoHash = Geohash.encode(context.lat, context.lon, 5);
-          return geoHashApi.get(`/${context.cruise}/${geoHash}.json`)
-            .then(({ data }) => {
-              const storeIndex = findNearestIndex(context.lon, context.lat, data);
-              commit('storeIndex', storeIndex);
-              context.storeIndex = storeIndex;
-              return context;
+          if (di !== state.depthIndex) {
+            commit('depthIndex', di);
+          }
+          commit('storeIndex', index);
+          commit('center', [-1 * di, index]);
+          return Promise.all([zarr.latitudeArray.get([index]), zarr.longitudeArray.get([index])])
+            .then(([latA, lonA]) => {
+              commit('centerLat', latA);
+              commit('centerLon', lonA);
             },
-            () => {
-            // TODO check neighbors?
-              commit('storeIndex', -1);
+            (error) => {
+              dispatch('app/addErrors', ['unable to load location data'], { root: true });
+              throw error;
             });
         })
-        .then((context) => {
-          // TODO optimize this.  Frequencies do not need to be retreived every time.
-          console.log(context);
-          return getFrequencies().then((frequencies) => {
-            commit('frequencies', frequencies);
-            const frequency = frequencies[0];
-            commit('selectedFrequency', frequency);
-            context.frequency = frequency;
-            return context;
-          });
-        })
-        .then((context) => getCenterLatLon(context.cruise, context.storeIndex)
-          .then(({ lat, lon }) => {
-            commit('centerLat', lat);
-            commit('centerLon', lon);
-            return context;
-          }));
+        .then(() => {
+          commit('loading', false);
+          return {
+            storeIndex: state.storeIndex,
+            depthIndex: state.depthIndex,
+            frequency: state.selectedFrequency,
+            cruise: state.cruise,
+          };
+        }, (e) => {
+          commit('loading', false);
+          throw e;
+        });
     },
-    // updateStoreIndex({ commit }, {
-    //   lat, lon, cruise, storeIndex,
-    // }) {
-    //   commit('cruise', cruise);
-    //   const geoHash = Geohash.encode(lat, lon, 5);
-    //   commit('geoHash', geoHash);
-    //   if (storeIndex && storeIndex >= 0) {
-    //     commit('storeIndex', storeIndex);
-    //   } else {
-    //     geoHashApi.get(`/${cruise}/${geoHash}.json`).then(({ data }) => {
-    //       commit('storeIndex', findNearestIndex(lon, lat, data));
-    //     },
-    //     () => {
-    //       // TODO check neighbors?
-    //       commit('storeIndex', -1);
-    //     });
-    //   }
-    // },
   },
 };
