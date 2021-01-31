@@ -19,9 +19,6 @@
         <span>Lat: {{ selectedLat }}</span><br />
         <span>Depth: {{ selectedDepthMeters }}</span><br />
       </span>
-      Sunrise ☼ <b>{{ sunrise }}</b><br />
-      Sunset ☀ <b>{{ sunset }}</b><br />
-      Moon Phase: <b>{{ moonPhase }}</b><br />
     </div>
   </div>
 </template>
@@ -38,9 +35,6 @@ export default {
   computed: {
     ...mapGetters({
       storeUseLocalTime: 'cruiseView/useLocalTime',
-      sunrise: 'cruiseView/sunrise',
-      sunset: 'cruiseView/sunset',
-      moonPhase: 'cruiseView/moonPhase',
       zoneName: 'cruiseView/zoneName',
       selectedLat: 'cruiseView/selectedLat',
       selectedLon: 'cruiseView/selectedLon',

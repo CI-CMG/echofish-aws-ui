@@ -5,74 +5,77 @@
 
 import { mapGetters } from 'vuex';
 import { slice } from 'zarr';
-import LRU from 'lru-cache';
-
-const length = 512 * 512 * 4;
-
-const tileCache = new LRU(20);
-
-const createKey = ({
-  y, x, cruise, selectedFrequency,
-}) => `${cruise}:${selectedFrequency}:${x}:${y}`;
 
 export default {
-  props: ['coords'],
+
+  props: ['coords', 'dataStore', 'maxBoundsValue', 'dataDimension'],
+
+  data() {
+    return {
+      imageData: null,
+      canvas: null,
+    };
+  },
+
   methods: {
     drawTile() {
       const ctx = this.$refs.canvas.getContext('2d');
 
-      const key = createKey(this.drawContext);
-      let imageData = tileCache.get(key);
-      if (imageData) {
-        ctx.putImageData(imageData, 0, 0);
+      const maxBoundsX = Math.abs(this.dataDimension[1]);
+      const maxBoundsY = Math.abs(this.dataDimension[0]);
+
+      const maxTileBoundsX = Math.abs(this.maxBoundsValue[1][1]) / 512;
+      const maxTileBoundsY = Math.abs(this.maxBoundsValue[0][0]) / 512;
+
+      const indicesLeft = 512 * this.drawContext.x;
+      const indicesRight = Math.min(512 * this.drawContext.x + 512, maxBoundsX);
+      const indicesTop = 512 * this.drawContext.y;
+      const indicesBottom = Math.min(512 * this.drawContext.y + 512, maxBoundsY);
+
+      console.log({
+        indicesLeft, indicesRight, indicesTop, indicesBottom,
+      });
+
+      if (this.drawContext.y >= maxTileBoundsY || this.drawContext.y < 0 || this.drawContext.x < 0 || this.drawContext.x >= maxTileBoundsX) {
+        ctx.font = '14px serif';
+        ctx.fillText(`{${this.drawContext.x}, ${this.drawContext.y}, ${this.drawContext.z}}`, 20, 50);
+        ctx.strokeStyle = '#07a30c';
+        ctx.beginPath();
+        ctx.rect(10, 10, 502, 502);
+        ctx.stroke();
         return;
       }
+      this.dataStore.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), 0])
+        .then((d) => {
+          const [height, width] = d.shape;
+          const uintc8 = new Uint8ClampedArray(d.data.length * 4);
+          let pixelValue = 255;
 
-      const {
-        y, x, selectedFrequency,
-      } = this.drawContext;
-
-      const depth = y * 512;
-      const index = x * 512;
-      const freq = this.frequencies.indexOf(selectedFrequency);
-
-      const top = depth;
-      const bottom = Math.min(top + 512, this.zarr.dataArray.shape[0]);
-      const left = index;
-      const right = Math.min(left + 512, this.zarr.dataArray.shape[1]);
-
-      this.zarr.dataArray.get([slice(top, bottom), slice(left, right), freq])
-        .then(({ data, shape }) => {
-          const [height, width] = shape;
-
-          const uintc8 = new Uint8ClampedArray(length);
-          let i = 0;
-          for (let colIndex = 0; colIndex < 512; colIndex++) {
-            for (let pointIndex = 0; pointIndex < 512; pointIndex++) {
-              if (colIndex >= height || pointIndex >= width) {
-                uintc8[i * 4] = 255;
-                uintc8[i * 4 + 1] = 0;
-                uintc8[i * 4 + 2] = 0;
-                uintc8[i * 4 + 3] = 255;
-              } else {
-                const point = data[colIndex][pointIndex];
-                uintc8[i * 4] = 255 - Math.abs(point);
-                uintc8[i * 4 + 1] = 255 - Math.abs(point);
-                uintc8[i * 4 + 2] = 255 - Math.abs(point);
-                uintc8[i * 4 + 3] = 255;
-              }
-              i++;
+          for (let i = 0; i < d.data.length; i++) {
+            if (Number.isNaN(parseFloat(d.data[i]))) {
+              pixelValue = 255;
+            } else {
+              pixelValue = 255 - (Math.abs(d.data[i]) / 100) * 255; // TODO: color here!
             }
+            uintc8[i * 4] = pixelValue;
+            uintc8[i * 4 + 1] = pixelValue;
+            uintc8[i * 4 + 2] = pixelValue;
+            uintc8[i * 4 + 3] = 255;
           }
-          imageData = new ImageData(uintc8, 512, 512);
-          tileCache.set(key, imageData);
-          ctx.putImageData(imageData, 0, 0);
+
+          ctx.putImageData(new ImageData(uintc8, width, height), 0, 0);
+          // ctx.strokeStyle = '#FF0000';
+          // ctx.beginPath();
+          // ctx.rect(10, 10, 502, 502);
+          // ctx.stroke();
         });
     },
   },
+
   mounted() {
     this.drawTile();
   },
+
   computed: {
     ...mapGetters({
       selectedFrequency: 'cruiseView/selectedFrequency',
@@ -84,14 +87,8 @@ export default {
       return {
         y: this.coords.y,
         x: this.coords.x,
-        selectedFrequency: this.selectedFrequency,
-        cruise: this.cruise,
+        z: this.coords.z,
       };
-    },
-  },
-  watch: {
-    drawContext() {
-      this.drawTile();
     },
   },
 };
