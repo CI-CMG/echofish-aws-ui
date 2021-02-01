@@ -1,9 +1,9 @@
 <template>
 
   <span>
-    <span class="mr-2 ml-2">{{ cruise }}</span>
-<!--    TODO remove me-->
-    <span class="mr-2">{{ storeIndex }}</span>
+    <span class="mr-2 ml-2">Cruise: <b>{{ cruise }}</b></span>
+<!--    TODO remove me -->
+<!--    <span class="mr-2">{{ storeIndex }}</span>-->
     <b-dropdown :text="`${selectedFrequency}`">
       <b-dropdown-item v-for="frequency in frequencies" :key="frequency" @click="() => setSelectedFrequency(frequency)">{{frequency}}</b-dropdown-item>
     </b-dropdown>

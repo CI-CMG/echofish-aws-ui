@@ -4,12 +4,14 @@
     v-if="center.length || zarr.dataStore"
     ref="map"
     :crs="crs"
+    :zoom="zoom"
     :center="center"
     :minZoom="0"
     :maxZoom="0"
     :maxBounds="maxBounds"
-    @click="updateCursor"
+    @click="cursorUpdated"
     @update:center="mapCenterUpdated"
+    :options="{zoomControl: false}"
   >
     <l-grid-layer
       id="tile-property-wrapper"
@@ -17,6 +19,7 @@
       :tileSize=512
     >
     </l-grid-layer>
+    <l-control-zoom position="bottomright"></l-control-zoom>
   </l-map>
 
 </template>
@@ -24,9 +27,8 @@
 <script>
 import Vue from 'vue';
 import { CRS } from 'leaflet';
-import { mapMutations, mapGetters } from 'vuex';
+import { mapMutations, mapGetters, mapActions } from 'vuex';
 import { LMap, LGridLayer } from 'vue2-leaflet';
-import { openArray } from 'zarr';
 import TileComponent from './TileComponent.vue';
 
 const TilePropertyWrapper = (component, props) => Vue.component('tile-property-wrapper', {
@@ -51,11 +53,7 @@ export default {
   data() {
     return {
       crs: CRS.Simple,
-      maxBoundsValue: null,
-      dataDimension: null,
-      z: {
-        dataStore: null,
-      },
+      zoom: 0,
     };
   },
 
@@ -72,13 +70,13 @@ export default {
       center: 'cruiseView/center',
       selectedFrequency: 'cruiseView/selectedFrequency',
       zarr: 'cruiseView/zarr',
+      selectedLat: 'cruiseView/selectedLat',
+      selectedLon: 'cruiseView/selectedLon',
+      selectedTimestampMillis: 'cruiseView/selectedTimestampMillis',
+      selectedDepthMeters: 'cruiseView/selectedDepthMeters',
     }),
     tileComponent() {
-      return TilePropertyWrapper(TileComponent, {
-        dataStore: this.z.dataStore,
-        maxBoundsValue: this.maxBoundsValue,
-        dataDimension: this.dataDimension,
-      });
+      return TilePropertyWrapper(TileComponent);
     },
   },
 
@@ -86,14 +84,22 @@ export default {
     ...mapMutations({
       onSelectPoint: 'cruiseView/onSelectPoint',
     }),
-    updateCursor() {
-      const epochMillis = Math.floor(Math.random() * 1611184676926) + 1;
-      const depthMeters = Math.floor(Math.random() * 600);
+    ...mapActions({
+      updateCursorValues: 'cruiseView/updateCursorValues',
+    }),
+    cursorUpdated(e) {
+      const cursorLocation = e.latlng;
+
+      this.updateCursorValues({
+        storeIndex: Math.floor(cursorLocation.lng),
+        depthMeters: cursorLocation.lat.toFixed(2),
+      });
+
       this.onSelectPoint({
-        lat: Math.floor(Math.random() * 181) - 90,
-        lon: Math.floor(Math.random() * 361) - 180,
-        epochMillis,
-        depthMeters,
+        lat: this.selectedLat,
+        lon: this.selectedLon,
+        epochMillis: this.selectedTimestampMillis,
+        depthMeters: this.selectedDepthMeters,
       });
     },
     mapCenterUpdated(center) {
@@ -106,12 +112,7 @@ export default {
   },
 
   created() {
-    openArray({ store: 'https://ef-demo-zarr-store.s3-us-west-2.amazonaws.com/GU1002_resample.zarr', path: 'data', mode: 'r' })
-      .then((x) => {
-        this.z.dataStore = x;
-        this.dataDimension = x.meta.shape; // {1000, 19747, 5};
-        this.maxBoundsValue = [[-1 * Math.ceil(x.meta.shape[0] / 512) * 512, 0], [0, Math.ceil(x.meta.shape[1] / 512) * 512]];
-      });
+
   },
 };
 </script>

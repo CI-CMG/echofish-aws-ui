@@ -1,29 +1,35 @@
 <template>
+
   <b-container fluid class="pr-0 pl-0">
+
     <b-row no-gutters style="height: 30px;">
-      <b-col style="background-color: green; ">
+      <b-col style="background-color: #61bd4f;">
         <Header />
       </b-col>
     </b-row>
+
     <b-row no-gutters style="background-color: blue; height: 100vh;
-    margin-top: -30px;
-    padding-top: 30px;
-    margin-bottom: -30px;
-    padding-bottom: 30px;
-">
-      <b-col sm="3" xl="2" style="background-color: orange;">
+      margin-top: -30px;
+      padding-top: 30px;
+      margin-bottom: -30px;
+      padding-bottom: 30px;
+    ">
+      <b-col sm="3" xl="2" style="background-color: #b7ddb0;">
         <InfoPanel />
       </b-col>
       <b-col  style="background-color: teal;">
         <Echogram :onMoveEchogram="onMoveEchogram"/>
       </b-col>
     </b-row>
+
     <b-row no-gutters style="height: 30px;">
-      <b-col style="background-color: yellow;">
+      <b-col style="background-color: #61bd4f;">
         <Footer/>
       </b-col>
     </b-row>
+
   </b-container>
+
 </template>
 
 <script>
@@ -88,6 +94,7 @@ export default {
     }),
     ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
+      // updateCursorValues: 'cruiseView/updateCursorValues',
     }),
     onMoveEchogram({ storeIndex, depthIndex }) {
       this.$router.push({

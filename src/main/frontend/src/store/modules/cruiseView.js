@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
 import tzlookup from 'tz-lookup';
 import Geohash from 'latlon-geohash';
-import { openArray } from 'zarr';
+import { openArray, slice } from 'zarr';
 import { defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
 import geoHashApi from '../../api/geoHashApi';
 import { ZARR_BASE_PATH } from '../../basePath';
@@ -21,7 +21,7 @@ const getDateTime = (epochMillis, timezone) => {
     return '';
   }
   const tempDate = new Date(0);
-  tempDate.setUTCMilliseconds(epochMillis);
+  tempDate.setUTCMilliseconds(epochMillis * 1000);
   const timestamp = tempDate.toISOString().substring(0, 19);
   const localTime = moment.tz(timestamp, 'Etc/UTC').clone().tz(`${timezone}`);
   return localTime;
@@ -49,7 +49,7 @@ const updateTimeFields = (state, lat, lon, epochMillis, depthMeters, useLocalTim
   state.selectedLat = lat;
   state.selectedLon = lon;
   state.selectedTimestampMillis = epochMillis;
-  // state.selectedDepthMeters = depthMeters;
+  state.selectedDepthMeters = depthMeters;
   state.selectedTimezone = getTimezone(useLocalTime, lat, lon);
   state.selectedDateTime = getDateTime(epochMillis, state.selectedTimezone);
 };
@@ -197,11 +197,11 @@ export default {
       updateTimeFields(state, state.selectedLat, state.selectedLon, state.selectedTimestampMillis,
         state.selectedDepthMeters, state.useLocalTime);
     },
-    // onMoveEchogram(state, { lat, lon, epochMillis }) {
-    //   state.centerLat = lat;
-    //   state.centerLon = lon;
-    //   state.centerTimestampMillis = epochMillis;
-    // },
+    onMoveEchogram(state, { lat, lon, epochMillis }) {
+      state.centerLat = lat;
+      state.centerLon = lon;
+      state.centerTimestampMillis = epochMillis;
+    },
     onSelectPoint(state, {
       lat, lon, epochMillis, depthMeters,
     }) {
@@ -219,12 +219,25 @@ export default {
     centerLon(state, centerLon) {
       state.centerLon = centerLon;
     },
+    selectedLon(state, selectedLon) {
+      state.selectedLon = selectedLon;
+    },
+    selectedLat(state, selectedLat) {
+      state.selectedLat = selectedLat;
+    },
+    selectedTimestampMillis(state, selectedTimestampMillis) {
+      state.selectedTimestampMillis = selectedTimestampMillis;
+    },
+    selectedDepthMeters(state, selectedDepthMeters) {
+      state.selectedDepthMeters = selectedDepthMeters;
+    },
   },
 
   actions: {
     prepareCruiseView({ commit, dispatch, state }, {
       lat, lon, cruise, storeIndex, frequency,
     }) {
+      console.log(Date.now());
       commit('loading', true);
       if (cruise !== state.cruise) {
         commit('cruise', cruise);
@@ -310,6 +323,25 @@ export default {
         }, (e) => {
           commit('loading', false);
           throw e;
+        });
+    },
+
+    // when user clicks on map, update the cursor values in dashboard
+    updateCursorValues({ commit, state }, {
+      storeIndex, depthMeters,
+    }) {
+      console.log(Date.now());
+      const timestamp = state.zarr.timeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]);
+      const latitude = state.zarr.latitudeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0].toFixed(5));
+      const longitude = state.zarr.longitudeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0].toFixed(5));
+
+      Promise.all([timestamp, latitude, longitude])
+        .then((x) => {
+          // ({time: x[0], lat: x[1], lon: x[2]})
+          commit('selectedTimestampMillis', x[0]);
+          commit('selectedLat', x[1]);
+          commit('selectedLon', x[2]);
+          commit('selectedDepthMeters', depthMeters);
         });
     },
   },

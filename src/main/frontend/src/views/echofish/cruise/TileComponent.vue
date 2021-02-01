@@ -1,14 +1,14 @@
 <template>
   <canvas ref="canvas" width="512" height="512"></canvas>
 </template>
-<script>
 
+<script>
 import { mapGetters } from 'vuex';
 import { slice } from 'zarr';
 
 export default {
 
-  props: ['coords', 'dataStore', 'maxBoundsValue', 'dataDimension'],
+  props: ['coords'],
 
   data() {
     return {
@@ -20,21 +20,23 @@ export default {
   methods: {
     drawTile() {
       const ctx = this.$refs.canvas.getContext('2d');
+      const dataDimension = this.zarr.dataArray.meta.shape;
 
-      const maxBoundsX = Math.abs(this.dataDimension[1]);
-      const maxBoundsY = Math.abs(this.dataDimension[0]);
+      const maxBoundsX = Math.abs(dataDimension[1]);
+      const maxBoundsY = Math.abs(dataDimension[0]);
 
-      const maxTileBoundsX = Math.abs(this.maxBoundsValue[1][1]) / 512;
-      const maxTileBoundsY = Math.abs(this.maxBoundsValue[0][0]) / 512;
+      const maxBoundsValue = [[-1 * Math.ceil(dataDimension[0] / 512) * 512, 0], [0, Math.ceil(dataDimension[1] / 512) * 512]];
+      const maxTileBoundsX = Math.abs(maxBoundsValue[1][1]) / 512;
+      const maxTileBoundsY = Math.abs(maxBoundsValue[0][0]) / 512;
 
       const indicesLeft = 512 * this.drawContext.x;
       const indicesRight = Math.min(512 * this.drawContext.x + 512, maxBoundsX);
       const indicesTop = 512 * this.drawContext.y;
       const indicesBottom = Math.min(512 * this.drawContext.y + 512, maxBoundsY);
 
-      console.log({
-        indicesLeft, indicesRight, indicesTop, indicesBottom,
-      });
+      // console.log({
+      //   indicesLeft, indicesRight, indicesTop, indicesBottom,
+      // });
 
       if (this.drawContext.y >= maxTileBoundsY || this.drawContext.y < 0 || this.drawContext.x < 0 || this.drawContext.x >= maxTileBoundsX) {
         ctx.font = '14px serif';
@@ -45,7 +47,7 @@ export default {
         ctx.stroke();
         return;
       }
-      this.dataStore.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), 0])
+      this.zarr.dataArray.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), this.frequencies.indexOf(this.selectedFrequency)])
         .then((d) => {
           const [height, width] = d.shape;
           const uintc8 = new Uint8ClampedArray(d.data.length * 4);
@@ -62,12 +64,7 @@ export default {
             uintc8[i * 4 + 2] = pixelValue;
             uintc8[i * 4 + 3] = 255;
           }
-
           ctx.putImageData(new ImageData(uintc8, width, height), 0, 0);
-          // ctx.strokeStyle = '#FF0000';
-          // ctx.beginPath();
-          // ctx.rect(10, 10, 502, 502);
-          // ctx.stroke();
         });
     },
   },

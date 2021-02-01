@@ -12,12 +12,14 @@
       />
     </div>
     <div>
+      <br />
       <b-form-checkbox v-model="useLocalTime" name="localTime" switch>Local Time</b-form-checkbox>
+      <br />
       <span>
-        <span>Time: {{ selectedDateTime }}</span><br />
-        <span>Lon: {{ selectedLon }}</span><br />
-        <span>Lat: {{ selectedLat }}</span><br />
-        <span>Depth: {{ selectedDepthMeters }}</span><br />
+        <span>Time: <b>{{ selectedDateTime }}</b></span><br /><br />
+        <span>Longitude: <b>{{ selectedLon }}</b></span><br /><br />
+        <span>Latitude: <b>{{ selectedLat }}</b></span><br /><br />
+        <span>Depth (m): <b>{{ selectedDepthMeters }}</b></span><br />
       </span>
     </div>
   </div>
