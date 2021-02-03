@@ -28,7 +28,7 @@
 import Vue from 'vue';
 import { CRS } from 'leaflet';
 import { mapMutations, mapGetters, mapActions } from 'vuex';
-import { LMap, LGridLayer } from 'vue2-leaflet';
+import { LMap, LGridLayer, LControlZoom } from 'vue2-leaflet';
 import TileComponent from './TileComponent.vue';
 
 const TilePropertyWrapper = (component, props) => Vue.component('tile-property-wrapper', {
@@ -60,6 +60,7 @@ export default {
   components: {
     LMap,
     LGridLayer,
+    LControlZoom,
   },
 
   computed: {

@@ -5,6 +5,9 @@
 <script>
 import { mapGetters } from 'vuex';
 import { slice } from 'zarr';
+import { color } from 'd3-color';
+import { scaleLinear, scaleThreshold } from 'd3-scale';
+import * as d3 from 'd3';
 
 export default {
 
@@ -34,35 +37,38 @@ export default {
       const indicesTop = 512 * this.drawContext.y;
       const indicesBottom = Math.min(512 * this.drawContext.y + 512, maxBoundsY);
 
-      // console.log({
-      //   indicesLeft, indicesRight, indicesTop, indicesBottom,
-      // });
+      const min = this.sliderValues[0];
+      const max = this.sliderValues[1];
+      const palette = this.colorPalettes[this.selectedColorPalette];
+      const greyMapFunc = scaleLinear().domain([min, max]).range([0, 255]).clamp(true);
+      const colorfunc = scaleThreshold()
+        .domain(d3.range(0, 255, 255 / palette.length))
+        .range(this.colorPalettes[this.selectedColorPalette]);
+
+      // console.log({ indicesLeft, indicesRight, indicesTop, indicesBottom });
 
       if (this.drawContext.y >= maxTileBoundsY || this.drawContext.y < 0 || this.drawContext.x < 0 || this.drawContext.x >= maxTileBoundsX) {
         ctx.font = '14px serif';
-        ctx.fillText(`{${this.drawContext.x}, ${this.drawContext.y}, ${this.drawContext.z}}`, 20, 50);
+        ctx.fillText(`{${this.drawContext.x}, ${this.drawContext.y}, ${this.drawContext.z}}`, 20, 40);
         ctx.strokeStyle = '#07a30c';
         ctx.beginPath();
         ctx.rect(10, 10, 502, 502);
         ctx.stroke();
         return;
       }
+
       this.zarr.dataArray.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), this.frequencies.indexOf(this.selectedFrequency)])
         .then((d) => {
           const [height, width] = d.shape;
-          const uintc8 = new Uint8ClampedArray(d.data.length * 4);
-          let pixelValue = 255;
+          const uintc8 = new Uint8ClampedArray(d.data.length * 4).fill(255);
 
           for (let i = 0; i < d.data.length; i++) {
-            if (Number.isNaN(parseFloat(d.data[i]))) {
-              pixelValue = 255;
-            } else {
-              pixelValue = 255 - (Math.abs(d.data[i]) / 100) * 255; // TODO: color here!
+            if (!Number.isNaN(parseFloat(d.data[i])) && d.data[i] > min && d.data[i] < max) {
+              const pixelColor = color(colorfunc(greyMapFunc(d.data[i])).substring(0, 7));
+              uintc8[i * 4] = pixelColor.r;
+              uintc8[i * 4 + 1] = pixelColor.g;
+              uintc8[i * 4 + 2] = pixelColor.b;
             }
-            uintc8[i * 4] = pixelValue;
-            uintc8[i * 4 + 1] = pixelValue;
-            uintc8[i * 4 + 2] = pixelValue;
-            uintc8[i * 4 + 3] = 255;
           }
           ctx.putImageData(new ImageData(uintc8, width, height), 0, 0);
         });
@@ -79,13 +85,27 @@ export default {
       frequencies: 'cruiseView/frequencies',
       zarr: 'cruiseView/zarr',
       cruise: 'cruiseView/cruise',
+      colorValueArray: 'cruiseView/colorValueArray',
+      sliderValues: 'cruiseView/sliderValues',
+      colorPalettes: 'cruiseView/colorPalettes',
+      selectedColorPalette: 'cruiseView/selectedColorPalette',
     }),
     drawContext() {
       return {
         y: this.coords.y,
         x: this.coords.x,
         z: this.coords.z,
+        selectedFrequency: this.selectedFrequency,
+        sliderValues: this.sliderValues,
+        selectedColorPalette: this.selectedColorPalette,
+        cruise: this.cruise,
       };
+    },
+  },
+
+  watch: {
+    drawContext() {
+      this.drawTile();
     },
   },
 };

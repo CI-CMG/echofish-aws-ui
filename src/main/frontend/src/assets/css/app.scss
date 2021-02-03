@@ -45,3 +45,7 @@ html, body {
 }
 
 .leaflet-control-attribution { display: none; } /* hides leaflet attribution */
+
+a, a:visited, a:hover, a:active {
+  color: inherit;
+}

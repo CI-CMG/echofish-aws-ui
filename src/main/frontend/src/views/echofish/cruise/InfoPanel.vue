@@ -12,7 +12,7 @@
       />
     </div>
     <div>
-      <br />
+      <br /><br />
       <b-form-checkbox v-model="useLocalTime" name="localTime" switch>Local Time</b-form-checkbox>
       <br />
       <span>

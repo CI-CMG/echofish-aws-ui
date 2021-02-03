@@ -1,6 +1,7 @@
 <template>
 
   <span>
+    <span style="color: blue"><router-link v-bind:to="{ name: 'map-view' }"><b>[ Echofish ]</b></router-link></span>
     <span class="mr-2 ml-2">Cruise: <b>{{ cruise }}</b></span>
 <!--    TODO remove me -->
 <!--    <span class="mr-2">{{ storeIndex }}</span>-->

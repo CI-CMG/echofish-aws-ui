@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import tzlookup from 'tz-lookup';
 import Geohash from 'latlon-geohash';
 import { openArray, slice } from 'zarr';
-import { defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
+import { colorPalettes, defaultColorPalette } from '../../views/echofish/cruise/WaterColumnColors';
 import geoHashApi from '../../api/geoHashApi';
 import { ZARR_BASE_PATH } from '../../basePath';
 
@@ -60,8 +60,10 @@ const defaultState = (state = {}) => {
   state.selectedFrequency = -1;
   state.selectedFrequencyIndex = -1;
   state.frequencies = [];
-  state.sliderValues = [-80, -30];
+  state.sliderValues = [-90, -40];
+  state.colorPalettes = colorPalettes;
   state.selectedColorPalette = defaultColorPalette;
+  state.colorValueArray = null;
   state.useLocalTime = false;
   state.zoneName = '';
   state.selectedLat = null;
@@ -114,8 +116,14 @@ export default {
     sliderValues(state) {
       return state.sliderValues;
     },
+    colorPalettes(state) {
+      return state.colorPalettes;
+    },
     selectedColorPalette(state) {
       return state.selectedColorPalette;
+    },
+    colorValueArray(state) {
+      return state.colorValueArray;
     },
     useLocalTime(state) {
       return state.useLocalTime;
@@ -191,6 +199,9 @@ export default {
     },
     selectedColorPalette(state, selectedColorPalette) {
       state.selectedColorPalette = selectedColorPalette;
+    },
+    colorValueArray(state, colorValueArray) {
+      state.colorValueArray = colorValueArray;
     },
     useLocalTime(state, useLocalTime) {
       state.useLocalTime = useLocalTime;

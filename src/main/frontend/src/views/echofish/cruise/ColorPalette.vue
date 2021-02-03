@@ -23,6 +23,7 @@
 
 <script>
 import * as d3 from 'd3';
+import { mapMutations } from 'vuex';
 import { colorPalettes } from './WaterColumnColors';
 import idGen from '../../../idGenerator';
 
@@ -55,7 +56,11 @@ export default {
     },
   },
   methods: {
+    ...mapMutations({
+      setColorValueArray: 'cruiseView/colorValueArray',
+    }),
     popupRange(index) {
+      this.setColorValueArray(this.colorValueArray);
       const min = this.colorValueArray[index];
       const max = index === this.colorValueArray.length - 1 ? this.max : this.colorValueArray[index + 1];
       return `${min.toFixed(2)} to ${max.toFixed(2)}`;
