@@ -19,7 +19,8 @@
         <span>Time: <b>{{ selectedDateTime }}</b></span><br /><br />
         <span>Longitude: <b>{{ selectedLon }}</b></span><br /><br />
         <span>Latitude: <b>{{ selectedLat }}</b></span><br /><br />
-        <span>Depth (m): <b>{{ selectedDepthMeters }}</b></span><br />
+        <span>Depth (m): <b>{{ selectedDepthMeters }}</b></span><br /><br />
+        <span v-if="selectedDataValue">Selected: <b>{{ selectedDataValue.toFixed(2) }} dB</b></span>
       </span>
     </div>
   </div>
@@ -31,9 +32,16 @@ import logoSmall from '@/assets/blue_small.png';
 import { mapMutations, mapGetters, mapActions } from 'vuex';
 
 export default {
+  data() {
+    return {
+      formattedSelectedDataValue: null,
+    };
+  },
+
   components: {
     CesiumVue,
   },
+
   computed: {
     ...mapGetters({
       storeUseLocalTime: 'cruiseView/useLocalTime',
@@ -43,6 +51,7 @@ export default {
       selectedTimestampMillis: 'cruiseView/selectedTimestampMillis',
       selectedDepthMeters: 'cruiseView/selectedDepthMeters',
       selectedDateTime: 'cruiseView/selectedDateTime',
+      selectedDataValue: 'cruiseView/selectedDataValue',
       centerLat: 'cruiseView/centerLat',
       centerLon: 'cruiseView/centerLon',
     }),
@@ -66,6 +75,7 @@ export default {
       };
     },
   },
+
   methods: {
     ...mapMutations({
       setUseLocalTime: 'cruiseView/useLocalTime',
@@ -73,6 +83,13 @@ export default {
     ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
     }),
+    formatSelectedDataValue() {
+      if (this.selectedDataValue != null) {
+        this.formattedSelectedDataValue = this.selectedDataValue.toFixed(2);
+      } else {
+        this.formattedSelectedDataValue = this.selectedDataValue;
+      }
+    },
     onPathClick({ cruiseName, longitude, latitude }) {
       this.prepareCruiseView({ lat: latitude, lon: longitude, cruise: cruiseName })
         .then(({

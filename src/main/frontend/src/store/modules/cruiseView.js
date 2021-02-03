@@ -23,8 +23,7 @@ const getDateTime = (epochMillis, timezone) => {
   const tempDate = new Date(0);
   tempDate.setUTCMilliseconds(epochMillis * 1000);
   const timestamp = tempDate.toISOString().substring(0, 19);
-  const localTime = moment.tz(timestamp, 'Etc/UTC').clone().tz(`${timezone}`);
-  return localTime;
+  return moment.tz(timestamp, 'Etc/UTC').clone().tz(`${timezone}`);
 };
 
 const estimateDistance = (lon1, lat1, lon2, lat2) => Math.sqrt(
@@ -60,7 +59,7 @@ const defaultState = (state = {}) => {
   state.selectedFrequency = -1;
   state.selectedFrequencyIndex = -1;
   state.frequencies = [];
-  state.sliderValues = [-90, -40];
+  state.sliderValues = [-80, -30];
   state.colorPalettes = colorPalettes;
   state.selectedColorPalette = defaultColorPalette;
   state.colorValueArray = null;
@@ -72,11 +71,13 @@ const defaultState = (state = {}) => {
   state.selectedDepthMeters = null;
   state.selectedDateTime = '';
   state.selectedTimezone = '';
+  state.selectedDataValue = null;
   state.centerLat = 0;
   state.centerLon = 0;
   state.center = [];
   state.zoom = 0;
   state.geoHash = '';
+  state.depthIndex = -1;
   state.storeIndex = -1;
   state.zarr = {};
   state.maxBounds = [[0, 0], [0, 0]];
@@ -89,6 +90,9 @@ export default {
   state: defaultState(),
 
   getters: {
+    depthIndex(state) {
+      return state.depthIndex;
+    },
     maxBounds(state) {
       return state.maxBounds;
     },
@@ -149,6 +153,9 @@ export default {
     selectedTimezone(state) {
       return state.selectedTimezone;
     },
+    selectedDataValue(state) {
+      return state.selectedDataValue;
+    },
     centerLat(state) {
       return state.centerLat;
     },
@@ -167,6 +174,9 @@ export default {
   },
 
   mutations: {
+    depthIndex(state, depthIndex) {
+      state.depthIndex = depthIndex;
+    },
     maxBounds(state, maxBounds) {
       state.maxBounds = maxBounds;
     },
@@ -205,8 +215,14 @@ export default {
     },
     useLocalTime(state, useLocalTime) {
       state.useLocalTime = useLocalTime;
-      updateTimeFields(state, state.selectedLat, state.selectedLon, state.selectedTimestampMillis,
-        state.selectedDepthMeters, state.useLocalTime);
+      updateTimeFields(
+        state,
+        state.selectedLat,
+        state.selectedLon,
+        state.selectedTimestampMillis,
+        state.selectedDepthMeters,
+        state.useLocalTime,
+      );
     },
     onMoveEchogram(state, { lat, lon, epochMillis }) {
       state.centerLat = lat;
@@ -242,11 +258,14 @@ export default {
     selectedDepthMeters(state, selectedDepthMeters) {
       state.selectedDepthMeters = selectedDepthMeters;
     },
+    selectedDataValue(state, selectedDataValue) {
+      state.selectedDataValue = selectedDataValue;
+    },
   },
 
   actions: {
     prepareCruiseView({ commit, dispatch, state }, {
-      lat, lon, cruise, storeIndex, frequency,
+      lat, lon, cruise, storeIndex, depthIndex, frequency,
     }) {
       console.log(Date.now());
       commit('loading', true);
@@ -312,8 +331,17 @@ export default {
       return Promise.all([zarrPromise, storeIndexPromise])
         .then(([zarr, index]) => {
           commit('zarr', zarr);
+          let di;
+          if (depthIndex == null || depthIndex < 0) {
+            di = 0;
+          } else {
+            di = depthIndex;
+          }
+          if (di !== state.depthIndex) {
+            commit('depthIndex', di);
+          }
           commit('storeIndex', index);
-          commit('center', [-1, index]);
+          commit('center', [-1 * di, index]);
           return Promise.all([zarr.latitudeArray.get([index]), zarr.longitudeArray.get([index])])
             .then(([latA, lonA]) => {
               commit('centerLat', latA);
@@ -328,6 +356,7 @@ export default {
           commit('loading', false);
           return {
             storeIndex: state.storeIndex,
+            depthIndex: state.depthIndex,
             frequency: state.selectedFrequency,
             cruise: state.cruise,
           };
@@ -341,18 +370,21 @@ export default {
     updateCursorValues({ commit, state }, {
       storeIndex, depthMeters,
     }) {
-      console.log(Date.now());
-      const timestamp = state.zarr.timeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]);
+      // console.log(Date.now());
+      const depthAbs = Math.abs(parseFloat(depthMeters));
       const latitude = state.zarr.latitudeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0].toFixed(5));
       const longitude = state.zarr.longitudeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0].toFixed(5));
+      const timestamp = state.zarr.timeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]);
+      const data = state.zarr.dataArray.getRaw([slice(depthAbs, depthAbs + 1), slice(storeIndex, storeIndex + 1), 0]).then((z) => z);
 
-      Promise.all([timestamp, latitude, longitude])
+      Promise.all([timestamp, latitude, longitude, data])
         .then((x) => {
           // ({time: x[0], lat: x[1], lon: x[2]})
           commit('selectedTimestampMillis', x[0]);
           commit('selectedLat', x[1]);
           commit('selectedLon', x[2]);
           commit('selectedDepthMeters', depthMeters);
+          commit('selectedDataValue', Array.from(x[3].data)[0]);
         });
     },
   },
