@@ -1,6 +1,12 @@
 <template>
-  <div>
-    <div style="width: 100%; height: 150px;">
+  <div id="infoPanel" class="container" :class="{'infoPanel-open': !infoPanelCollapsed}">
+    <div class="infoPanel-header row m-2">
+      <div class="closebtn"  @click="toggleInfoPanel">
+        &times;
+<!--        <font-awesome-icon class="expand-icon" icon="angle-double-left" />-->
+      </div>
+    </div>
+    <div  style="width: 100%; height: 150px;">
       <CesiumVue
         ref="map"
         :longitude="centerLon"
@@ -54,6 +60,7 @@ export default {
       selectedDataValue: 'cruiseView/selectedDataValue',
       centerLat: 'cruiseView/centerLat',
       centerLon: 'cruiseView/centerLon',
+      infoPanelCollapsed: 'infoPanel/collapsed',
     }),
     useLocalTime: {
       get() {
@@ -82,6 +89,7 @@ export default {
     }),
     ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
+      toggleInfoPanel: 'infoPanel/toggleCollapsed',
     }),
     formatSelectedDataValue() {
       if (this.selectedDataValue != null) {

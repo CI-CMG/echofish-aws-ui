@@ -1,39 +1,40 @@
 <template>
-
+  <div class="wrapper">
   <b-container fluid class="pr-0 pl-0">
-
-    <b-row no-gutters style="height: 30px;">
-      <b-col style="background-color: #61bd4f;">
-        <Header />
-      </b-col>
-    </b-row>
-
-    <b-row no-gutters style="background-color: blue; height: 100vh;
+    <div id="content" :class="{'InfoPanel-open': !infoPanelCollapsed }">
+      <b-row no-gutters style="height: 30px;">
+        <b-col class="cruiseview" >
+          <Header />
+        </b-col>
+      </b-row>
+      <b-row no-gutters style="background-color: blue; height: 100vh;
       margin-top: -30px;
       padding-top: 30px;
       margin-bottom: -30px;
       padding-bottom: 30px;
     ">
-      <b-col sm="3" xl="2" style="background-color: #b7ddb0;">
+        <div class="overlay"
+             :class="{'InfoPanel-open': !infoPanelCollapsed}"
+             @click="toggleInfoPanel">
+        </div>
         <InfoPanel />
-      </b-col>
-      <b-col  style="background-color: teal;">
-        <Echogram :onMoveEchogram="onMoveEchogram"/>
-      </b-col>
-    </b-row>
+        <b-col  style="background-color: teal;">
+          <Echogram :onMoveEchogram="onMoveEchogram"/>
+        </b-col>
+      </b-row>
 
-    <b-row no-gutters style="height: 30px;">
-      <b-col style="background-color: #61bd4f;">
-        <Footer/>
-      </b-col>
-    </b-row>
-
+      <b-row no-gutters style="height: 30px;">
+        <b-col class="cruiseview">
+          <Footer/>
+        </b-col>
+      </b-row>
+    </div>
   </b-container>
-
+  </div>
 </template>
 
 <script>
-import { mapMutations, mapActions } from 'vuex';
+import { mapMutations, mapActions, mapGetters } from 'vuex';
 import Header from './Header.vue';
 import Footer from './Footer.vue';
 import InfoPanel from './InfoPanel.vue';
@@ -56,6 +57,7 @@ export default {
     // ...mapGetters({
     //   storeIndex: 'cruiseView/storeIndex',
     // }),
+    ...mapGetters({ infoPanelCollapsed: 'infoPanel/collapsed' }),
     freq() {
       return parseInt(this.frequency, 10);
     },
@@ -94,6 +96,7 @@ export default {
     }),
     ...mapActions({
       prepareCruiseView: 'cruiseView/prepareCruiseView',
+      toggleInfoPanel: 'infoPanel/toggleCollapsed',
       // updateCursorValues: 'cruiseView/updateCursorValues',
     }),
     onMoveEchogram({ storeIndex, depthIndex }) {

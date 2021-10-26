@@ -49,3 +49,44 @@ html, body {
 a, a:visited, a:hover, a:active {
   color: inherit;
 }
+
+.overlay {
+  display: none;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: all 0.5s ease-in-out;
+  &.infoPanel-open {
+    display: block;
+    opacity: 1;
+  }
+}
+.cruiseview{
+  background: $mid-grey;
+}
+
+#infoPanel {
+  width: 250px;
+  position: fixed;
+  top: 0;
+  left: -250px;
+  height: 100vh;
+  z-index: 999;
+  background:  $mid-grey;
+  color: $bg-white;
+  transition: all 0.3s;
+  overflow-y: auto;
+  //box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
+  &.infoPanel-open {
+    left: 0;
+  }
+  .infoPanel-header {
+    img {
+      width: 38px;
+      height: 38px;
+    }
+  }
+}
