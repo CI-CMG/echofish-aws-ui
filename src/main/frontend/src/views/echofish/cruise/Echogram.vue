@@ -13,6 +13,9 @@
     @update:center="mapCenterUpdated"
     :options="{zoomControl: false}"
   >
+    <l-marker
+      v-if="svVisible"
+      :lat-lng="svMarker"></l-marker>
     <l-grid-layer
       id="tile-property-wrapper"
       :tile-component="tileComponent"
@@ -28,7 +31,9 @@
 import Vue from 'vue';
 import { CRS } from 'leaflet';
 import { mapMutations, mapGetters, mapActions } from 'vuex';
-import { LMap, LGridLayer, LControlZoom } from 'vue2-leaflet';
+import {
+  LMap, LGridLayer, LControlZoom, LMarker,
+} from 'vue2-leaflet';
 import TileComponent from './TileComponent.vue';
 
 const TilePropertyWrapper = (component, props) => Vue.component('tile-property-wrapper', {
@@ -54,6 +59,8 @@ export default {
     return {
       crs: CRS.Simple,
       zoom: 0,
+      svMarker: [-204, 113503],
+      svVisible: false,
     };
   },
 
@@ -61,6 +68,7 @@ export default {
     LMap,
     LGridLayer,
     LControlZoom,
+    LMarker,
   },
 
   computed: {
@@ -90,7 +98,8 @@ export default {
     }),
     cursorUpdated(e) {
       const cursorLocation = e.latlng;
-
+      this.svMarker = cursorLocation;
+      this.svVisible = true;
       this.updateCursorValues({
         storeIndex: Math.floor(cursorLocation.lng),
         depthMeters: cursorLocation.lat.toFixed(2),
