@@ -2,16 +2,18 @@
   <div class="wrapper">
   <b-container fluid class="pr-0 pl-0">
     <div id="content" :class="{'InfoPanel-open': !infoPanelCollapsed }">
-      <b-row no-gutters style="height: 30px;">
+      <b-row no-gutters style="min-height: 40px;">
         <b-col class="cruiseview" >
           <Header />
         </b-col>
       </b-row>
-      <b-row no-gutters style="background-color: blue; height: 100vh;
-      margin-top: -30px;
-      padding-top: 30px;
+      <b-row no-gutters style="
+      background-color: blue;
+      margin-top: -40px;
+      padding-top: 40px;
       margin-bottom: -30px;
       padding-bottom: 30px;
+      height: 100vh;
     ">
         <div class="overlay"
              :class="{'InfoPanel-open': !infoPanelCollapsed}"

@@ -68,12 +68,31 @@ a, a:visited, a:hover, a:active {
   background: $mid-grey;
 }
 
+.show-hide-sidebar-button {
+  .expand-icon {
+    margin-left: 0.25em;
+  }
+}
+
+.echo-nav-brand {
+  .echo-nav-icon {
+    height: 23px;
+    width: 23px;
+    margin-right: 3px;
+    margin-left: 3px;
+  }
+  span {
+    vertical-align: middle;
+  }
+}
+
 #infoPanel {
   width: 250px;
   position: fixed;
-  top: 0;
+  top: 30px;
+  bottom: 30px;
   left: -250px;
-  height: 100vh;
+  height: auto;
   z-index: 999;
   background:  $mid-grey;
   color: $bg-white;

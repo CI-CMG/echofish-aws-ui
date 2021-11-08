@@ -95,6 +95,7 @@ export default {
     }),
     ...mapActions({
       updateCursorValues: 'cruiseView/updateCursorValues',
+      toggleSidebar: 'infoPanel/toggleOpened',
     }),
     cursorUpdated(e) {
       const cursorLocation = e.latlng;
@@ -111,6 +112,7 @@ export default {
         epochMillis: this.selectedTimestampMillis,
         depthMeters: this.selectedDepthMeters,
       });
+      this.toggleSidebar();
     },
     mapCenterUpdated(center) {
       if (center) {

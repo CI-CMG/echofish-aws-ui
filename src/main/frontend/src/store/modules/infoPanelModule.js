@@ -9,6 +9,9 @@ export default {
     },
   },
   mutations: {
+    toggleOpened(state) {
+      state.collapsed = false;
+    },
     toggleCollapsed(state) {
       state.collapsed = !state.collapsed;
     },
@@ -19,6 +22,9 @@ export default {
     },
   },
   actions: {
+    toggleOpened({ commit }) {
+      commit('toggleOpened');
+    },
     toggleCollapsed({ commit }) {
       commit('toggleCollapsed');
     },
