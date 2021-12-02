@@ -1,13 +1,9 @@
 <template>
   <div id="infoPanel" class="container" :class="{'infoPanel-open': !infoPanelCollapsed}">
     <div class="infoPanel-header row m-2">
-<!--      <div class="closebtn"  @click="toggleInfoPanel">-->
-<!--        &times;-->
-<!--&lt;!&ndash;        <font-awesome-icon class="expand-icon" icon="angle-double-left" />&ndash;&gt;-->
-<!--      </div>-->
-            <b-button class="close float-right" aria-label="Close"  @click="toggleInfoPanel">
-              <span aria-hidden="true">&times;</span>
-            </b-button>
+      <b-button class="close float-right" aria-label="Close"  @click="toggleInfoPanel">
+        <span aria-hidden="true"></span>
+      </b-button>
     </div>
     <div  style="width: 100%; height: 150px;">
       <CesiumVue

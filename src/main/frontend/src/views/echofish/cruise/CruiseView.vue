@@ -2,8 +2,8 @@
   <div class="wrapper">
   <b-container fluid class="pr-0 pl-0">
     <div id="content" :class="{'InfoPanel-open': !infoPanelCollapsed }">
-      <b-row no-gutters style="min-height: 40px;">
-        <b-col class="cruiseview" >
+      <b-row no-gutters>
+        <b-col class="cruiseview-header" >
           <Header />
         </b-col>
       </b-row>
@@ -11,7 +11,7 @@
       background-color: blue;
       margin-top: -40px;
       padding-top: 40px;
-      margin-bottom: -30px;
+      /*margin-bottom: -30px;*/
       padding-bottom: 30px;
       height: 100vh;
     ">
@@ -25,11 +25,11 @@
         </b-col>
       </b-row>
 
-      <b-row no-gutters style="height: 30px;">
-        <b-col class="cruiseview">
-          <Footer/>
-        </b-col>
-      </b-row>
+<!--      <b-row no-gutters style="height: 30px;">-->
+<!--        <b-col class="cruiseview">-->
+<!--          <Footer/>-->
+<!--        </b-col>-->
+<!--      </b-row>-->
     </div>
   </b-container>
   </div>
@@ -38,14 +38,14 @@
 <script>
 import { mapMutations, mapActions, mapGetters } from 'vuex';
 import Header from './Header.vue';
-import Footer from './Footer.vue';
+// import Footer from './Footer.vue';
 import InfoPanel from './InfoPanel.vue';
 import Echogram from './Echogram.vue';
 
 export default {
   components: {
     Header,
-    Footer,
+    // Footer,
     InfoPanel,
     Echogram,
   },
