@@ -31,7 +31,7 @@
             </template>
             <b-dropdown-item v-for="colorPalette in colorPalettes" :key="colorPalette" @click="() => setSelectedColorPalette(colorPalette)">{{colorPalette}}</b-dropdown-item>
           </b-nav-item-dropdown>
-          <b-nav-item>SV:</b-nav-item>
+          <b-nav-item>Sv:</b-nav-item>
           <template>
             <b-container fluid>
               <b-row>
