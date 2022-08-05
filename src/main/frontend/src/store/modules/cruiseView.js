@@ -72,6 +72,7 @@ const defaultState = (state = {}) => {
   state.selectedDateTime = '';
   state.selectedTimezone = '';
   state.selectedDataValue = null;
+  state.selectedDataSlice = [NaN, NaN, NaN, NaN]; // TODO: needs to accommodate different lengths
   state.centerLat = 0;
   state.centerLon = 0;
   state.center = [];
@@ -155,6 +156,9 @@ export default {
     },
     selectedDataValue(state) {
       return state.selectedDataValue;
+    },
+    selectedDataSlice(state) {
+      return state.selectedDataSlice;
     },
     centerLat(state) {
       return state.centerLat;
@@ -260,6 +264,9 @@ export default {
     },
     selectedDataValue(state, selectedDataValue) {
       state.selectedDataValue = selectedDataValue;
+    },
+    selectedDataSlice(state, selectedDataSlice) {
+      state.selectedDataSlice = selectedDataSlice;
     },
   },
 
@@ -376,8 +383,10 @@ export default {
       const longitude = state.zarr.longitudeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0].toFixed(5));
       const timestamp = state.zarr.timeArray.get(slice(storeIndex, storeIndex + 1)).then((z) => Array.from(z.data)[0]);
       const data = state.zarr.dataArray.getRaw([slice(depthAbs, depthAbs + 1), slice(storeIndex, storeIndex + 1), 0]).then((z) => z);
+      const dataSlice = state.zarr.dataArray.getRaw([slice(depthAbs, depthAbs + 1), slice(storeIndex, storeIndex + 1), null]).then((z) => z);
+      // dataSlice will be used for plotting the line graph
 
-      Promise.all([timestamp, latitude, longitude, data])
+      Promise.all([timestamp, latitude, longitude, data, dataSlice])
         .then((x) => {
           // ({time: x[0], lat: x[1], lon: x[2]})
           commit('selectedTimestampMillis', x[0]);
@@ -385,6 +394,7 @@ export default {
           commit('selectedLon', x[2]);
           commit('selectedDepthMeters', depthMeters);
           commit('selectedDataValue', Array.from(x[3].data)[0]);
+          commit('selectedDataSlice', Array.from(x[4].data));
         });
     },
   },

@@ -16,17 +16,31 @@
         :billboard="billboard"
       />
     </div>
+
     <div>
       <br /><br />
+
       <b-form-checkbox v-model="useLocalTime" name="localTime" switch>Local Time</b-form-checkbox>
+
       <br />
+
       <span>
         <span>Time: <b>{{ selectedDateTime }}</b></span><br /><br />
+
         <span>Longitude: <b>{{ selectedLon }}</b></span><br /><br />
+
         <span>Latitude: <b>{{ selectedLat }}</b></span><br /><br />
+
         <span>Depth (m): <b>{{ selectedDepthMeters }}</b></span><br /><br />
-        <span v-if="selectedDataValue">Selected: <b>{{ selectedDataValue.toFixed(2) }} dB</b></span>
+
+        <span v-if="selectedDataValue">Selected (Sv): <b>{{ selectedDataValue.toFixed(2) }} dB</b></span>
+
+        <MultiFrequencyPlot />
+
+        <br />
+
       </span>
+
     </div>
   </div>
 </template>
@@ -35,6 +49,7 @@
 import CesiumVue from '@/components/cesium/CesiumVue.vue';
 import logoSmall from '@/assets/blue_small.png';
 import { mapMutations, mapGetters, mapActions } from 'vuex';
+import MultiFrequencyPlot from '@/components/waterColumn/MultiFrequencyPlot.vue';
 
 export default {
   data() {
@@ -45,6 +60,7 @@ export default {
 
   components: {
     CesiumVue,
+    MultiFrequencyPlot,
   },
 
   computed: {
@@ -90,13 +106,6 @@ export default {
       prepareCruiseView: 'cruiseView/prepareCruiseView',
       toggleInfoPanel: 'infoPanel/toggleCollapsed',
     }),
-    formatSelectedDataValue() {
-      if (this.selectedDataValue != null) {
-        this.formattedSelectedDataValue = this.selectedDataValue.toFixed(2);
-      } else {
-        this.formattedSelectedDataValue = this.selectedDataValue;
-      }
-    },
     onPathClick({ cruiseName, longitude, latitude }) {
       this.prepareCruiseView({ lat: latitude, lon: longitude, cruise: cruiseName })
         .then(({
@@ -107,7 +116,7 @@ export default {
             cruise, storeIndex, depthIndex, frequency,
           },
         }).catch((err) => {
-          // Ignore the vuex err regarding  navigating to the page they are already on.
+          // Ignore the vuex err regarding navigating to the page they are already on.
           if (
             err.name !== 'NavigationDuplicated'
             && !err.message.includes('Avoided redundant navigation to current location')

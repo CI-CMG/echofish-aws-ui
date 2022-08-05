@@ -1,5 +1,7 @@
 <template>
-  <div class="map" ref="cs"/>
+  <div>
+    <div class="map" ref="cs"/>
+  </div>
 </template>
 
 <script>
@@ -11,6 +13,7 @@ import MapboxVectorTileImageryProvider from './imagery/MapboxVectorTileImageryPr
 const MAX_CLICKABLE_HEIGHT = 150000;
 
 export default {
+
   props: {
     geoJson: Object,
     viewRect: {
@@ -33,6 +36,12 @@ export default {
       required: false,
     },
   },
+
+  data() {
+    return {
+    };
+  },
+
   methods: {
     getViewer() {
       return this.viewer;
@@ -212,6 +221,7 @@ export default {
       }
     },
   },
+
   computed: {
     position() {
       return {
@@ -221,6 +231,7 @@ export default {
       };
     },
   },
+
   watch: {
     billboard(billboard) {
       this.setBillboard(billboard);
@@ -255,6 +266,7 @@ export default {
         });
     },
   },
+
   mounted() {
     // Tile Service Working For Gazetteer
     // var GEBCO_2019_BASEMAP = new Cesium.WebMapTileServiceImageryProvider({
@@ -359,3 +371,8 @@ export default {
   },
 };
 </script>
+<!--_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+-->
+<style scoped>
+
+</style>
+<!--_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+-->

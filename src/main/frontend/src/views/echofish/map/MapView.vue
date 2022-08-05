@@ -1,5 +1,17 @@
 <template>
   <div class="map-view">
+    <b-button id="button-1" v-b-modal.modal-information>Information</b-button>
+
+    <b-modal id="modal-information" title="EchoFish" ok-only hide-footer="true" centered visible>
+      <p>Welcome to EchoFish, a data exploration tool for investigating water column sonar data archived at the <b-link id="modal-link" href="https://www.ncei.noaa.gov/products/water-column-sonar-data">NOAA National Centers for Environmental Information</b-link> (NCEI)!</p>
+      <br />
+      <p>Water column sonar data, the acoustic backscatter from the near-surface of the ocean to the seafloor, are used to assess physical and biological characteristics including the spatial distribution of plankton, fish, methane seeps, and underwater oil plumes.</p>
+      <br />
+      <p>A copy of the NCEI Water Column Sonar Data Archive is available on <b-link id="modal-link" href="https://registry.opendata.aws/ncei-wcsd-archive/">Amazon Web Services</b-link>. EchoFish currently displays the cloud-hosted EK60 datasets. EchoFish is being developed by CIRES / NCEI staff and will progressively include more functionality, improved performance, and additional datasets. Visit often!</p>
+      <br />
+      <p>Please send questions or comments to <b-link id="modal-link" href = "mailto: wcd.info@noaa.gov">wcd.info@noaa.gov</b-link></p>
+    </b-modal>
+
     <cesium-vue
       :longitude="-105.2705"
       :latitude="40.0150"
@@ -61,3 +73,20 @@ export default {
   },
 };
 </script>
+<!--_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+-->
+<style scoped>
+  #button-1 {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    z-index: 999;
+  }
+  #modal-information p {
+    font-size: 1.35em;
+  }
+  #modal-link {
+    color: blue;
+    text-decoration: underline;
+  }
+</style>
+<!--_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+_+-->
