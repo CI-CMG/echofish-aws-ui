@@ -393,7 +393,7 @@ export default {
           commit('selectedLat', x[1]);
           commit('selectedLon', x[2]);
           commit('selectedDepthMeters', depthMeters);
-          commit('selectedDataValue', Array.from(x[3].data)[0]);
+          commit('selectedDataValue', Array.from(x[3].data)[0]); // TODO: is this correct for selected frequency?
           commit('selectedDataSlice', Array.from(x[4].data));
         });
     },

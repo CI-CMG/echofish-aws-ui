@@ -39,7 +39,7 @@ export default {
 
   methods: {
     ...mapActions('cruiseView', [
-      'redraw',
+      'redraw', // TODO: Delete?
     ]),
     drawPalette() {
       const min = this.sliderValues[0]; const max = this.sliderValues[1];
@@ -50,7 +50,7 @@ export default {
         max,
         (max - min) / palette.length,
       );
-      this.$store.dispatch('cruiseView/updateColorScaleFunction',
+      this.$store.dispatch('cruiseView/updateColorScaleFunction', // TODO: Delete?
         scaleOrdinal().domain(this.colorValueArray).range(palette));
 
       d3.select('#colorPalette').selectAll('*').remove();
@@ -105,7 +105,7 @@ export default {
         return store.state.cruiseView.selectedPalette;
       },
       set(value) {
-        this.$store.dispatch('cruiseView/updateSelectedPalette', value);
+        this.$store.dispatch('cruiseView/updateSelectedPalette', value); // TODO: Delete?
       },
     },
     colorScaleFunction: {
@@ -113,7 +113,7 @@ export default {
         return store.state.cruiseView.colorScaleFunction;
       },
       set(func) {
-        this.$store.dispatch('cruiseView/updateColorScaleFunction', func);
+        this.$store.dispatch('cruiseView/updateColorScaleFunction', func); // TODO: Delete?
       },
     },
     colorValueArray: {
@@ -121,7 +121,7 @@ export default {
         return store.state.cruiseView.colorValueArray;
       },
       set(arr) {
-        this.$store.dispatch('cruiseView/updateColorValueArray', arr);
+        this.$store.dispatch('cruiseView/updateColorValueArray', arr); // TODO: Delete?
       },
     },
   },
