@@ -208,6 +208,6 @@ buildNumber.properties
 *.iml
 /.idea/
 
-src/main/frontend/node_modules/
+src/main/frontendOLD/node_modules/
 src/main/fontend/dist/
 src/main/fontend/coverage/
