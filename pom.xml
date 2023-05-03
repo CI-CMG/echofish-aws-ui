@@ -29,7 +29,7 @@
 
     <resources>
       <resource>
-        <directory>src/main/frontend/dist</directory>
+        <directory>src/main/frontendOLD/dist</directory>
         <targetPath>static</targetPath>
         <excludes>
           <exclude>**/.*</exclude>
@@ -74,7 +74,7 @@
         <configuration>
           <nodeVersion>${node.version}</nodeVersion>
           <npmVersion>${npm.version}</npmVersion>
-          <workingDirectory>src/main/frontend</workingDirectory>
+          <workingDirectory>src/main/frontendOLD</workingDirectory>
           <installDirectory>target/node-install</installDirectory>
         </configuration>
         <executions>
@@ -115,7 +115,7 @@
               <goal>npm</goal>
             </goals>
             <configuration>
-              <workingDirectory>src/main/frontend</workingDirectory>
+              <workingDirectory>src/main/frontendOLD</workingDirectory>
               <arguments>run build</arguments>
             </configuration>
           </execution>

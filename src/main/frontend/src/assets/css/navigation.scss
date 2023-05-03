@@ -1,0 +1,23 @@
+.NavigationView {
+  // border: 2px solid red;
+  // background-color: #ADD8E6;
+  text-align: right;
+  background-color: rgb(135, 206, 235);
+  background-color: DarkSlateGrey;
+  padding: 7px;
+  color: cornflowerblue;
+
+  a {
+    font-weight: 200;
+    font-size: 1em;
+    color: skyblue;
+
+    &.router-link-exact-active {
+      color: white;
+    }
+  }
+  a:link { text-decoration: none; }
+  a:visited { text-decoration: none; }
+  a:hover { text-decoration: none; }
+  a:active { text-decoration: none; }
+}

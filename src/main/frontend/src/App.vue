@@ -1,34 +1,12 @@
 <template>
-  <div>
-    <b-alert
-      :show="countDown"
-      dismissible
-      variant="danger"
-      @dismissed="dismissAlert"
-      @dismiss-count-down="countDownChanged"
-    >
-      <p v-for="error in errors" :key="error">{{error}}</p>
-      <b-progress variant="danger" :value="countDown" max="20" height="4px"></b-progress>
-    </b-alert>
-    <router-view/>
-  </div>
+  <nav class="NavigationView">
+    <router-link to="/">home</router-link> |
+    <router-link to="/WaterColumnView">water-column</router-link> |
+    <router-link to="/MapView">map</router-link>
+  </nav>
+  <router-view/>
 </template>
 
-<script>
-import { mapGetters, mapActions } from 'vuex';
+<style lang="scss">
 
-export default {
-  methods: {
-    ...mapActions({
-      countDownChanged: 'app/countDownChanged',
-      dismissAlert: 'app/dismissAlert',
-    }),
-  },
-  computed: {
-    ...mapGetters({
-      errors: 'app/errors',
-      countDown: 'app/countDown',
-    }),
-  },
-};
-</script>
+</style>

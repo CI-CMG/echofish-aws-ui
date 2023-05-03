@@ -1,11 +1,18 @@
-@import './bootstrap-custom.scss';
-@import '~bootstrap/scss/bootstrap.scss';
-@import '~bootstrap-vue/src/index.scss';
-//@import '~cesium/Source/Widgets/widgets.css';
-@import '~nprogress/nprogress.css';
-@import '~leaflet/dist/leaflet.css';
-//@import '~leaflet.fullscreen/Control.FullScreen.css';
-@import '~vue-slider-component/theme/antd.css';
-@import './app.scss';
+@use './navigation.scss';
+@use './home.scss';
+@use './waterColumn.scss';
+@use './map.scss';
 
+body {
+  margin: 0px;
+  padding: 0px;
 
+  text-align: right;
+  color: darkslateblue;
+  font-family: 'IBM Plex Mono', monospace;
+  h1 {
+    font-size: 2.5em;
+    margin: 0;
+    font-weight: 200;
+  }
+}
