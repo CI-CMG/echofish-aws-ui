@@ -1,31 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="<%= BASE_URL %>apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="<%= BASE_URL %>favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="<%= BASE_URL %>favicon-16x16.png">
-  <link rel="manifest" href="<%= BASE_URL %>site.webmanifest">
-  <link rel="mask-icon" href="<%= BASE_URL %>safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="msapplication-TileColor" content="#da532c">
-  <meta name="theme-color" content="#ffffff">
-  <title>EchoFish</title>
-  <script type="application/javascript">
-    window.apiBasePath = '<%= VUE_APP_API_BASE_URL %>';
-    window.mvtBasePath = '<%= VUE_APP_MVT_BASE_URL %>';
-    window.geoHashBasePath = '<%= VUE_APP_GEO_HASH_BASE_URL %>';
-    window.zarrBasePath = '<%= VUE_APP_ZARR_BASE_URL %>';
-    window.CESIUM_BASE_URL = '/Cesium';
-  </script>
-</head>
-<body>
-<noscript>
-  <strong>We're sorry but frontend doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-</noscript>
-<div id="app"></div>
-<!-- built files will be auto injected -->
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>ui/images/gebco.ico">
+    <title>GEBCO Gazetteer</title>
+    <script type="application/javascript">
+      window.CESIUM_BASE_URL = '<%= BASE_URL %>ui/Cesium';
+      window.applicationConfiguration = {
+        contextRoot: '<%= VUE_APP_BASE_URL %>/',
+        authServiceUrl: '<%= VUE_APP_AUTH_SERVICE_URL %>',
+        clientId: '<%= VUE_APP_CLIENT_ID %>',
+        version: '<%= VUE_APP_VERSION %>'
+      };
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
 </html>

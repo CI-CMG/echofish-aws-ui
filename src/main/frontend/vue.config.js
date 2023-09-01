@@ -1,75 +1,48 @@
-const path = require('path');
-const webpack = require('webpack');
-const CopywebpackPlugin = require('copy-webpack-plugin');
+const { defineConfig } = require('@vue/cli-service');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const cesiumSource = 'node_modules/cesium/Source';
-const cesiumWorkers = '../Build/Cesium/Workers';
-
-module.exports = {
+module.exports = defineConfig({
+  parallel: false,
   chainWebpack: (config) => {
-    config.plugin('html')
-      .tap((args) => {
-        args[0].minify = false;
-        return args;
-      });
-
-    const svgRule = config.module.rule('svg');
-    svgRule.uses.clear();
-
-    svgRule
-      .use('babel-loader')
-      .loader('babel-loader')
-      .end()
-      .use('vue-svg-loader')
-      .loader('vue-svg-loader')
-      .options({
-        svgo: {
-          plugins: [
-            { prefixIds: true },
-          ],
-        },
-      });
+    config.plugin('polyfills').use(NodePolyfillPlugin);
   },
-
-  publicPath: '/',
-  devServer: {
-    hotOnly: true,
-    https: true,
+  transpileDependencies: true,
+  pluginOptions: {
+    vuetify: {
+      // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vuetify-loader
+    },
   },
-  configureWebpack: {
-    output: {
-      sourcePrefix: '',
-    },
-    // amd: {
-    //   toUrlUndefined: true,
-    // },
-    node: {
-      // Resolve node module use of fs
-      fs: 'empty',
-    },
-    resolve: {
-      alias: {
-        vue$: 'vue/dist/vue.esm.js',
-        '@': path.resolve(__dirname, 'src'),
-        cesium: path.resolve(__dirname, cesiumSource),
-      },
-    },
-    plugins: [
-      new CopywebpackPlugin(
-        [
-          { from: path.join(cesiumSource, 'ThirdParty'), to: 'ThirdParty' },
-          { from: path.join(cesiumSource, cesiumWorkers), to: 'Workers' },
-          { from: path.join(cesiumSource, 'Assets'), to: 'Assets' },
-          { from: path.join(cesiumSource, 'Widgets'), to: 'Widgets' },
+  outputDir: 'dist',
+  assetsDir: 'ui',
+  publicPath: process.env.NODE_ENV === 'production' ? '@contextRoot@' : `${process.env.VUE_APP_BASE_URL}`,
+  configureWebpack: (config) => {
+    config.devtool = process.env.NODE_ENV === 'production' ? 'source-map' : 'eval-source-map';
+    config.output.devtoolModuleFilenameTemplate = (info) => (info.resourcePath.match(/\.vue$/) && !info.identifier.match(/type=script/)
+      ? `webpack-generated:///${info.resourcePath}?${info.hash}`
+      : `webpack-yourCode:///${info.resourcePath}`);
+    config.output.devtoolFallbackModuleFilenameTemplate = 'webpack:///[resource-path]?[hash]';
+    config.plugins.push(
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: 'node_modules/cesium/Build/Cesium/ThirdParty',
+            to: 'ui/Cesium/ThirdParty',
+          },
+          {
+            from: 'node_modules/cesium/Build/Cesium/Workers',
+            to: 'ui/Cesium/Workers',
+          },
+          {
+            from: 'node_modules/cesium/Build/Cesium/Assets',
+            to: 'ui/Cesium/Assets',
+          },
+          {
+            from: 'node_modules/cesium/Build/Cesium/Widgets',
+            to: 'ui/Cesium/Widgets',
+          },
         ],
-      ),
-      new webpack.DefinePlugin({
-        // Define relative base path in cesium for loading assets
-        CESIUM_BASE_URL: JSON.stringify('/'),
       }),
-    ],
-    // module: {
-    //   unknownContextCritical: false,
-    // },
-  },
-};
+    );
+  }
+});

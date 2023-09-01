@@ -1,0 +1,77 @@
+{
+  "name": "frontend2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@mapbox/point-geometry": "^0.1.0",
+    "@mapbox/vector-tile": "^1.3.1",
+    "axios": "^0.21.4",
+    "bootstrap": "^4.5.3",
+    "bootstrap-vue": "^2.21.1",
+    "cesium": "^1.76.0",
+    "chart.js": "^3.8.0",
+    "core-js": "^3.6.5",
+    "d3": "^6.3.1",
+    "d3-array": "^2.4.0",
+    "d3-color": "^1.4.1",
+    "d3-quadtree": "^3.0.1",
+    "d3-scale": "^3.2.1",
+    "hex-rgb": "^4.2.0",
+    "latlon-geohash": "^2.0.0",
+    "leaflet": "^1.7.1",
+    "lru-cache": "^6.0.0",
+    "moment-timezone": "^0.5.32",
+    "nprogress": "^0.2.0",
+    "pbf": "^3.2.1",
+    "popper": "^1.0.1",
+    "portal-vue": "^2.1.7",
+    "suncalc": "^1.8.0",
+    "tz-lookup": "^6.1.25",
+    "urijs": "^1.19.11",
+    "vue": "^2.6.11",
+    "vue-chartjs": "^4.1.1",
+    "vue-router": "^3.2.0",
+    "vue-slider-component": "^3.2.11",
+    "vue2-leaflet": "^2.7.1",
+    "vuejs-overlay": "0.0.28",
+    "vuejs-toggle-switch": "^1.3.2",
+    "vuex": "^3.4.0",
+    "vuex-map-fields": "^1.4.1",
+    "worker-loader": "^3.0.7",
+    "zarr": "^0.3.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-plugin-unit-jest": "~4.5.0",
+    "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-airbnb": "^5.0.2",
+    "@vue/test-utils": "^1.0.3",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "lint-staged": "^9.5.0",
+    "node-sass": "^4.12.0",
+    "sass-loader": "^8.0.2",
+    "vue-template-compiler": "^2.6.11",
+    "vue-svg-loader": "^0.16.0"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,vue}": [
+      "vue-cli-service lint",
+      "git add"
+    ]
+  }
+}

@@ -4,28 +4,41 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>edu.colorado.cires.cmg.echofish</groupId>
+  <groupId>io.github.ci-cmg.echofish</groupId>
   <artifactId>echofish-aws-ui</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <node.version>v14.15.3</node.version>
-    <npm.version>6.14.9</npm.version>
+    <node.version>v16.17.1</node.version>
+    <npm.version>8.15.0</npm.version>
   </properties>
 
-
+  <repositories>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <build>
-
-    <extensions>
-      <extension>
-        <groupId>com.gkatzioura.maven.cloud</groupId>
-        <artifactId>s3-storage-wagon</artifactId>
-        <version>2.3</version>
-      </extension>
-    </extensions>
 
     <resources>
       <resource>
@@ -42,8 +55,74 @@
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.22.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>3.0.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>ant-contrib</groupId>
+              <artifactId>ant-contrib</artifactId>
+              <version>1.0b3</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>ant</groupId>
+                  <artifactId>ant</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.ant</groupId>
+              <artifactId>ant-nodeps</artifactId>
+              <version>1.8.1</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>3.0.0-M4</version>
+        </plugin>
+        <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <version>4.9.10</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.2.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.9.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.1.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${javadoc.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.1.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -51,8 +130,8 @@
     <plugins>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>3.1.0</version>
         <configuration>
           <filesets>
             <fileset>
@@ -133,6 +212,32 @@
       </plugin>
 
       <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.8</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release,site-publish</releaseProfiles>
+          <goals>deploy site</goals>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <arguments>-Pdep-check</arguments>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.2.0</version>
         <configuration>
@@ -156,7 +261,6 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.0.3</version>
         <executions>
           <execution>
             <id>get-the-git-infos</id>
@@ -167,13 +271,14 @@
           </execution>
         </executions>
         <configuration>
+          <injectAllReactorProjects>true</injectAllReactorProjects>
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
           <offline>true</offline>
           <replacementProperties>
             <replacementProperty>
               <property>git.remote.origin.url</property>
               <propertyOutputSuffix>suffix</propertyOutputSuffix>
-              <token>^.+github\.com.(.*)\.git$</token>
+              <token>^.+/(.+).git$</token>
               <value>$1</value>
               <regex>true</regex>
             </replacementProperty>
@@ -202,7 +307,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <id>set-dependency-prop</id>
@@ -218,14 +322,16 @@
                     <if>
                       <contains string="@{line}" substring="SNAPSHOT"/>
                       <then>
-                        <propertyregex property="snapshot.prop" override="true" input="@{line}" regexp="\s*([a-zA-Z0-9_\-\.:]+)\s*.*" select="\1"/>
+                        <propertyregex property="snapshot.prop" override="true" input="@{line}"
+                          regexp="\s*([a-zA-Z0-9_\-\.:]+)\s*.*" select="\1"/>
                         <if>
                           <equals arg1="${snapshot.list}" arg2=""/>
                           <then>
                             <var name="snapshot.list" value="${snapshot.prop}"/>
                           </then>
                           <else>
-                            <var name="snapshot.list" value="${snapshot.list},${snapshot.prop}"/>
+                            <var name="snapshot.list"
+                              value="${snapshot.list},${snapshot.prop}"/>
                           </else>
                         </if>
                       </then>
@@ -240,53 +346,7 @@
             </goals>
           </execution>
         </executions>
-        <dependencies>
-          <dependency>
-            <groupId>ant-contrib</groupId>
-            <artifactId>ant-contrib</artifactId>
-            <version>1.0b3</version>
-            <exclusions>
-              <exclusion>
-                <groupId>ant</groupId>
-                <artifactId>ant</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant-nodeps</artifactId>
-            <version>1.8.1</version>
-          </dependency>
-        </dependencies>
       </plugin>
-
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>cloudformation</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/cloudformation</outputDirectory>
-              <useDefaultDelimiters>false</useDefaultDelimiters>
-              <delimiters>
-                <delimiter>@</delimiter>
-              </delimiters>
-              <resources>
-                <resource>
-                  <directory>cloudformation</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
 
     </plugins>
   </build>
@@ -294,20 +354,31 @@
   <profiles>
 
     <profile>
-      <id>dep-check</id>
+      <id>release</id>
       <build>
         <plugins>
           <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>5.3.2</version>
-            <configuration>
-              <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
-            </configuration>
+            <groupId>pl.project13.maven</groupId>
+            <artifactId>git-commit-id-plugin</artifactId>
             <executions>
               <execution>
+                <id>get-the-git-infos</id>
                 <goals>
-                  <goal>check</goal>
+                  <goal>revision</goal>
+                </goals>
+                <phase>pre-site</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
                 </goals>
               </execution>
             </executions>
@@ -316,28 +387,95 @@
       </build>
     </profile>
 
-
     <profile>
-      <id>release</id>
+      <id>site-publish</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.0.0-M3</version>
+            <artifactId>maven-site-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
             <executions>
               <execution>
-                <id>enforce-no-snapshots</id>
+                <id>index.html</id>
+                <phase>site</phase>
                 <goals>
-                  <goal>enforce</goal>
+                  <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <rules>
-                    <requireReleaseDeps>
-                      <message>No Snapshots Allowed!</message>
-                    </requireReleaseDeps>
-                  </rules>
-                  <fail>true</fail>
+                  <outputDirectory>${project.build.directory}/site-resources</outputDirectory>
+                  <useDefaultDelimiters>false</useDefaultDelimiters>
+                  <delimiters>
+                    <delimiter>@</delimiter>
+                  </delimiters>
+                  <resources>
+                    <resource>
+                      <directory>site-resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>publish-site</id>
+                <phase>site</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <delete dir="${project.build.directory}/project-documentation" quiet="true"/>
+                    <exec dir="${project.build.directory}" executable="git">
+                      <arg value="clone"/>
+                      <arg value="--depth=1"/>
+                      <arg value="git@github.com:CI-CMG/project-documentation.git"/>
+                    </exec>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git">
+                      <arg value="remote"/>
+                      <arg value="add"/>
+                      <arg value="javadoc"/>
+                      <arg value="git@github.com:CI-CMG/project-documentation.git"/>
+                    </exec>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git"
+                      failonerror="false">
+                      <arg value="rm"/>
+                      <arg value="-r"/>
+                      <arg value="${git.remote.origin.url.suffix}/${project.version}"/>
+                    </exec>
+                    <mkdir dir="${project.build.directory}/project-documentation/${git.remote.origin.url.suffix}"/>
+                    <copy todir="${project.build.directory}/project-documentation/${git.remote.origin.url.suffix}">
+                      <fileset file="${project.build.directory}/site-resources/index.html"/>
+                    </copy>
+                    <copy todir="${project.build.directory}/project-documentation/${git.remote.origin.url.suffix}/${project.version}">
+                      <fileset dir="${project.build.directory}/site"/>
+                    </copy>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git">
+                      <arg value="add"/>
+                      <arg value="${git.remote.origin.url.suffix}/index.html"/>
+                    </exec>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git">
+                      <arg value="add"/>
+                      <arg value="${git.remote.origin.url.suffix}/${project.version}"/>
+                    </exec>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git">
+                      <arg value="commit"/>
+                      <arg value="-m"/>
+                      <arg value="Update Documentation: ${git.remote.origin.url.suffix}/${project.version}"/>
+                    </exec>
+                    <exec dir="${project.build.directory}/project-documentation" executable="git">
+                      <arg value="push"/>
+                      <arg value="javadoc"/>
+                      <arg value="trunk"/>
+                    </exec>
+                  </target>
                 </configuration>
               </execution>
             </executions>
@@ -348,51 +486,5 @@
 
 
   </profiles>
-
-  <distributionManagement>
-    <snapshotRepository>
-      <id>echofish-snapshot-dist</id>
-      <url>s3://cires-cmg-echofish-repository/snapshot</url>
-    </snapshotRepository>
-    <repository>
-      <id>echofish-release-dist</id>
-      <url>s3://cires-cmg-echofish-repository/release</url>
-    </repository>
-  </distributionManagement>
-
-  <repositories>
-    <!--    Query central first-->
-    <repository>
-      <id>central</id>
-      <name>Central Repository</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>echofish-snapshot</id>
-      <url>https://cires-cmg-echofish-repository.s3-us-west-2.amazonaws.com/snapshot</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>echofish-release</id>
-      <url>https://cires-cmg-echofish-repository.s3-us-west-2.amazonaws.com/release</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 
 </project>
