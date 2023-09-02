@@ -3,6 +3,10 @@ const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = defineConfig({
+  devServer: {
+    port: 8085,
+    https: true,
+  },
   parallel: false,
   chainWebpack: (config) => {
     config.plugin('polyfills').use(NodePolyfillPlugin);
@@ -44,5 +48,5 @@ module.exports = defineConfig({
         ],
       }),
     );
-  }
+  },
 });
