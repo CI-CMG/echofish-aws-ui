@@ -208,15 +208,6 @@ const position = ref<Cesium.Cartesian3 | undefined>();
 const screenInputs = ref<ScreenInput[]>([]);
 const cameraInputs = ref<(() => void)[]>([]);
 
-const initializeDataSources = () => {
-  if (viewer.value) {
-    viewer.value.dataSources.removeAll(false);
-    dataSources.value.forEach((dataSource) => {
-      viewer.value?.dataSources.add(dataSource.dataSource);
-    });
-  }
-};
-
 const flyTo = () => {
   if (props.flyTo && viewer.value) {
     if (props.flyTo.target) {
@@ -226,6 +217,98 @@ const flyTo = () => {
     } else if (props.flyTo.boundingSphere) {
       viewer.value.camera.flyToBoundingSphere(props.flyTo.boundingSphere, props.flyTo);
     }
+  }
+};
+
+class WidgetEventContextImpl implements WidgetEventContext {
+  public onNewViewerCallbacks: Array<(viewer: CustomViewer) => void> = [];
+  public onUpdateDatasourceCallbacks: Array<(datasources: Cesium.DataSource) => void> = [];
+
+  onUpdateDatasource(callback: (datasource: Cesium.DataSource) => void) {
+    // if (viewer.value) {
+    //   callback(viewer.value);
+    // }
+    this.onUpdateDatasourceCallbacks.push(callback);
+  }
+
+  onNewViewer(callback: (viewer: CustomViewer) => void) {
+    if (viewer.value) {
+      callback(viewer.value);
+    }
+    this.onNewViewerCallbacks.push(callback);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  getViewer() {
+    if (viewer.value) {
+      return viewer.value;
+    }
+    throw new Cesium.RuntimeError('Viewer not initialized');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  updateGlobe(newGlobe?: Cesium.Globe) {
+    globe.value = newGlobe;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  setInputAction(event: Cesium.ScreenSpaceEventHandler.PositionedEventCallback | Cesium.ScreenSpaceEventHandler.MotionEventCallback | Cesium.ScreenSpaceEventHandler.WheelEventCallback | Cesium.ScreenSpaceEventHandler.TwoPointEventCallback | Cesium.ScreenSpaceEventHandler.TwoPointMotionEventCallback, type: Cesium.ScreenSpaceEventType, modifier?: Cesium.KeyboardEventModifier) {
+    screenInputs.value = [...screenInputs.value, new ScreenInput(event, type, modifier)];
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  setInputCameraAction(callback: () => void) {
+    cameraInputs.value = [...cameraInputs.value, callback];
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  updateDataSource(updateDataSource: Cesium.DataSource, index: number) {
+    const tempDataSources: IndexedDataSource[] = [];
+    let added = false;
+    dataSources.value.forEach((dataSource) => {
+      if (dataSource.index < index) {
+        tempDataSources.push(dataSource);
+      } else if (dataSource.index === index) {
+        tempDataSources.push(new IndexedDataSource(index, updateDataSource));
+        added = true;
+      } else if (dataSource.index > index) {
+        if (added) {
+          tempDataSources.push(dataSource);
+        } else {
+          tempDataSources.push(new IndexedDataSource(index, updateDataSource));
+          added = true;
+        }
+      }
+    });
+    if (!added) {
+      tempDataSources.push(new IndexedDataSource(index, updateDataSource));
+    }
+    dataSources.value = tempDataSources;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  changeSceneMode(sceneMode: Cesium.SceneMode) {
+    if (viewer.value) {
+      if (sceneMode === SceneMode.SCENE2D) {
+        viewer.value?.sceneModePicker.viewModel.morphTo2D();
+      } else {
+        viewer.value?.sceneModePicker.viewModel.morphTo3D();
+      }
+    }
+  }
+}
+
+const csEvents = new WidgetEventContextImpl();
+
+const initializeDataSources = () => {
+  if (viewer.value) {
+    viewer.value.dataSources.removeAll(false);
+    dataSources.value.forEach((dataSource) => {
+      viewer.value?.dataSources.add(dataSource.dataSource);
+      csEvents.onUpdateDatasourceCallbacks.forEach((callback) => {
+        callback(dataSource.dataSource);
+      });
+    });
   }
 };
 
@@ -331,6 +414,11 @@ const initializeViewer = () => {
     });
 
     initializeDataSources();
+    csEvents.onNewViewerCallbacks.forEach((callback) => {
+      if (viewer.value) {
+        callback(viewer.value);
+      }
+    });
   }
 };
 
@@ -793,61 +881,6 @@ watch(cameraInputs, (newValue, oldValue) => {
     });
   }
 });
-
-const csEvents: WidgetEventContext = {
-  getViewer() {
-    if (viewer.value) {
-      return viewer.value;
-    }
-    throw new Cesium.RuntimeError('Viewer not initialized');
-  },
-
-  updateGlobe(newGlobe) {
-    globe.value = newGlobe;
-  },
-
-  setInputAction(event, type, modifier) {
-    screenInputs.value = [...screenInputs.value, new ScreenInput(event, type, modifier)];
-  },
-
-  setInputCameraAction(callback: () => void) {
-    cameraInputs.value = [...cameraInputs.value, callback];
-  },
-
-  updateDataSource(updateDataSource, index) {
-    const tempDataSources: IndexedDataSource[] = [];
-    let added = false;
-    dataSources.value.forEach((dataSource) => {
-      if (dataSource.index < index) {
-        tempDataSources.push(dataSource);
-      } else if (dataSource.index === index) {
-        tempDataSources.push(new IndexedDataSource(index, updateDataSource));
-        added = true;
-      } else if (dataSource.index > index) {
-        if (added) {
-          tempDataSources.push(dataSource);
-        } else {
-          tempDataSources.push(new IndexedDataSource(index, updateDataSource));
-          added = true;
-        }
-      }
-    });
-    if (!added) {
-      tempDataSources.push(new IndexedDataSource(index, updateDataSource));
-    }
-    dataSources.value = tempDataSources;
-  },
-
-  changeSceneMode(sceneMode: Cesium.SceneMode) {
-    if (viewer.value) {
-      if (sceneMode === SceneMode.SCENE2D) {
-        viewer.value?.sceneModePicker.viewModel.morphTo2D();
-      } else {
-        viewer.value?.sceneModePicker.viewModel.morphTo3D();
-      }
-    }
-  },
-};
 
 watch(dataSources, () => {
   initializeDataSources();
