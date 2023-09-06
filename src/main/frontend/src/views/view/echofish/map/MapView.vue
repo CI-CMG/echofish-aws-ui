@@ -1,6 +1,10 @@
 <template>
   <div class="main-cesium-container">
     <cs-viewer>
+      <template #screenSpaceEventHandler="{ csEvents }">
+        <cs-screen-space-positioned-event-action :cs-events="csEvents" :type="Cesium.ScreenSpaceEventType.LEFT_CLICK" @input="mapMouseHandler.handleLeftClick" />
+        <cs-screen-space-positioned-event-action :cs-events="csEvents" :type="Cesium.ScreenSpaceEventType.MOUSE_MOVE" @input="mapMouseHandler.handleMouseMove" />
+      </template>
       <template #dataSources="{ csEvents }">
         <cs-mvt-data-source :cs-events="csEvents" name="mvt" :index="0" :show="true" />
       </template>
@@ -38,6 +42,15 @@
         </cs-globe>
       </template>
     </cs-viewer>
+    <feature-name-container
+      v-if="fnc.fncEntities.length"
+      :top="fnc.fncTop"
+      :left="fnc.fncLeft"
+      :entities="fnc.fncEntities"
+      :selectable="fnc.fncSelectable"
+      :latitude="fnc.fncLatitude"
+      :longitude="fnc.fncLongitude"
+      @select="mapMouseHandler.handleEntityClick" />
   </div>
 </template>
 
@@ -51,7 +64,14 @@ import CsGlobe from '@/lib/cesium-vue/vue/CsGlobe.vue';
 import MvtEntityFactory from '@/views/view/echofish/map/MvtEntityFactory';
 import CsImageryLayer from '@/lib/cesium-vue/vue/CsImageryLayer.vue';
 import CsUrlTemplateImageryProvider from '@/lib/cesium-vue/vue/CsUrlTemplateImageryProvider.vue';
+import CsScreenSpacePositionedEventAction from '@/lib/cesium-vue/vue/CsScreenSpacePositionedEventAction.vue';
+import FeatureNameContainer from '@/views/view/echofish/map/FeatureNameContainer.vue';
+import MapMouseHandler from '@/views/view/echofish/map/MapMouseHandler';
+import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
+import { reactive } from 'vue';
 
 const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
+const fnc = reactive(new FeatureNameContainerState());
+const mapMouseHandler = new MapMouseHandler(fnc);
 </script>
