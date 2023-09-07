@@ -22,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
             path: 'cruise/:shipName/:cruiseName/:sensorName/:storeIndex/:depthIndex/:frequency',
             name: 'cruise',
             component: CruiseView,
+            props: true,
           },
           {
             path: 'map',
