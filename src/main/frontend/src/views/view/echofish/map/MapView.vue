@@ -53,10 +53,13 @@ import MapMouseHandler from '@/views/view/echofish/map/MapMouseHandler';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
 import { reactive } from 'vue';
 import { ZARR_BASE_URL } from '@/basePath';
+import { Router, useRouter } from 'vue-router';
+
+const router: Router = useRouter();
 
 const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/cruise/Henry_B._Bigelow/HB0707/EK60/{z}/{x}/{y}.pbf`;
 const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());
-const mapMouseHandler = new MapMouseHandler(fnc);
+const mapMouseHandler = new MapMouseHandler(fnc, router);
 </script>

@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
         redirect: { name: 'map' },
         children: [
           {
-            path: 'cruise',
+            path: 'cruise/:shipName/:cruiseName/:sensorName/:storeIndex/:depthIndex/:frequency',
             name: 'cruise',
             component: CruiseView,
           },

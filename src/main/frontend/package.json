@@ -22,7 +22,8 @@
     "vue-router": "^4.1.6",
     "vuetify": "^3.1.6",
     "vuex": "^4.1.0",
-    "webfontloader": "^1.6.28"
+    "webfontloader": "^1.6.28",
+    "zarr": "^0.6.1"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",

@@ -4,6 +4,11 @@ import toNumber from 'lodash.tonumber';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
 import Geohash from 'latlon-geohash';
 import zarrApi from '@/api/zarrApi';
+import { Router } from 'vue-router';
+import {
+  openArray, HTTPStore,
+} from 'zarr';
+import { ZARR_BASE_URL } from '@/basePath';
 
 type CesiumEntityMapType = {
   [id: string]: Cesium.Entity;
@@ -22,9 +27,11 @@ type IndexFile = {
 
 export default class MapMouseHandler {
   private readonly fnc;
+  private readonly router: Router;
 
-  constructor(fnc: FeatureNameContainerState) {
+  constructor(fnc: FeatureNameContainerState, router: Router) {
     this.fnc = fnc;
+    this.router = router;
     this.handleMouseMove = debounce(this.handleMouseMoveInternal, 100).bind(this);
     this.handleLeftClick = this.handleLeftClick.bind(this);
     this.handleEntityClick = this.handleEntityClick.bind(this);
@@ -72,20 +79,40 @@ export default class MapMouseHandler {
     const sensorName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).sensorName;
     const clickedPoint = Cesium.Cartographic.fromDegrees(longitude, latitude);
     const geohash = Geohash.encode(latitude, longitude, 5);
-    zarrApi.get(`/spatial/geohash/cruise/${shipName}/${cruiseName}/${sensorName}/${geohash}.json`).then((response) => {
-      const indexFile = response.data as IndexFile;
-      let minDistance = -1;
-      let minIndex = 0;
-      indexFile.indexRecords.forEach((record) => {
-        const otherPoint = Cesium.Cartographic.fromDegrees(record.longitude, record.latitude);
-        const distance = new Cesium.EllipsoidGeodesic(clickedPoint, otherPoint).surfaceDistance;
-        if (minDistance === -1 || distance < minDistance) {
-          minDistance = distance;
-          minIndex = record.index;
-        }
+    zarrApi.get(`/spatial/geohash/cruise/${shipName}/${cruiseName}/${sensorName}/${geohash}.json`)
+      .then((response) => {
+        const indexFile = response.data as IndexFile;
+        let minDistance = -1;
+        let minIndex = 0;
+        indexFile.indexRecords.forEach((record) => {
+          const otherPoint = Cesium.Cartographic.fromDegrees(record.longitude, record.latitude);
+          const distance = new Cesium.EllipsoidGeodesic(clickedPoint, otherPoint).surfaceDistance;
+          if (minDistance === -1 || distance < minDistance) {
+            minDistance = distance;
+            minIndex = record.index;
+          }
+        });
+        return minIndex;
+      }).then((storeIndex) => {
+        const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName}/${cruiseName}/${sensorName}/${cruiseName}.zarr`);
+        openArray({ store, path: 'frequency', mode: 'r' })
+          .then((frequencyArray) => frequencyArray.get())
+          .then((nestedArray: any) => Array.from(nestedArray.data))
+          .then((frequencies) => frequencies[0] as number)
+          .then((frequency: number) => {
+            this.router.push({
+              name: 'cruise',
+              params: {
+                shipName,
+                cruiseName,
+                sensorName,
+                storeIndex,
+                depthIndex: 0,
+                frequency,
+              },
+            });
+          });
       });
-      console.log(`${shipName}/${cruiseName}/${sensorName}/${minIndex}`);
-    });
   }
 
   private clearFeatureNameContainer() {
