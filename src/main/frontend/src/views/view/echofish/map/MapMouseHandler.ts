@@ -2,9 +2,22 @@ import * as Cesium from 'cesium';
 import debounce from 'lodash.debounce';
 import toNumber from 'lodash.tonumber';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
+import Geohash from 'latlon-geohash';
+import zarrApi from '@/api/zarrApi';
 
 type CesiumEntityMapType = {
   [id: string]: Cesium.Entity;
+};
+
+type IndexFileRecord = {
+  index: number;
+  longitude: number;
+  latitude: number;
+};
+
+type IndexFile = {
+  path: string;
+  indexRecords: Array<IndexFileRecord>;
 };
 
 export default class MapMouseHandler {
@@ -24,14 +37,19 @@ export default class MapMouseHandler {
 
   handleLeftClick(event: Cesium.ScreenSpaceEventHandler.PositionedEvent, viewer: Cesium.Viewer) {
     const pickedFeatures: Array<Cesium.Entity> = viewer.scene.drillPick(event.position).map((a) => a.id as Cesium.Entity);
-    if (pickedFeatures.length === 1) {
-      this.clearFeatureNameContainer();
-      this.handleEntityClick(pickedFeatures[0]);
-    } else if (pickedFeatures.length > 1) {
-      this.updateFeatureNameContainer(pickedFeatures, event.position, true);
-      this.fnc.fncLocked = true;
-    } else if (this.fnc.fncLocked) {
-      this.clearFeatureNameContainer();
+    const ellipsoid = viewer.scene.globe.ellipsoid;
+    const coordinates = viewer.camera.pickEllipsoid(new Cesium.Cartesian3(event.position.x, event.position.y), ellipsoid);
+    if (coordinates) {
+      const cartographic = ellipsoid.cartesianToCartographic(coordinates);
+      if (pickedFeatures.length === 1) {
+        this.clearFeatureNameContainer();
+        this.handleEntityClick(Cesium.Math.toDegrees(cartographic.longitude), Cesium.Math.toDegrees(cartographic.latitude), pickedFeatures[0]);
+      } else if (pickedFeatures.length > 1) {
+        this.updateFeatureNameContainer(pickedFeatures, event.position, true);
+        this.fnc.fncLocked = true;
+      } else if (this.fnc.fncLocked) {
+        this.clearFeatureNameContainer();
+      }
     }
   }
 
@@ -48,11 +66,26 @@ export default class MapMouseHandler {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public handleEntityClick(pickedFeature: Cesium.Entity) {
+  public handleEntityClick(longitude: number, latitude: number, pickedFeature: Cesium.Entity) {
     const shipName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).shipName;
     const cruiseName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).cruiseName;
     const sensorName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).sensorName;
-    console.log(`${shipName}_${cruiseName}_${sensorName}`);
+    const clickedPoint = Cesium.Cartographic.fromDegrees(longitude, latitude);
+    const geohash = Geohash.encode(latitude, longitude, 5);
+    zarrApi.get(`/spatial/geohash/cruise/${shipName}/${cruiseName}/${sensorName}/${geohash}.json`).then((response) => {
+      const indexFile = response.data as IndexFile;
+      let minDistance = -1;
+      let minIndex = 0;
+      indexFile.indexRecords.forEach((record) => {
+        const otherPoint = Cesium.Cartographic.fromDegrees(record.longitude, record.latitude);
+        const distance = new Cesium.EllipsoidGeodesic(clickedPoint, otherPoint).surfaceDistance;
+        if (minDistance === -1 || distance < minDistance) {
+          minDistance = distance;
+          minIndex = record.index;
+        }
+      });
+      console.log(`${shipName}/${cruiseName}/${sensorName}/${minIndex}`);
+    });
   }
 
   private clearFeatureNameContainer() {
@@ -73,10 +106,8 @@ export default class MapMouseHandler {
         this.fnc.fncLeft = position.x + 7;
         this.fnc.fncTop = position.y + 7;
         this.fnc.fncSelectable = selectable;
-        console.log(this.fnc.fncEntities);
       } else if (this.fnc.fncEntities.length) {
         this.clearFeatureNameContainer();
-        console.log(this.fnc.fncEntities);
       }
     }
   }

@@ -11,31 +11,14 @@
       <template #globe="{ csEvents }">
         <cs-globe :cs-events="csEvents" :tile-cache-size="0" :preload-ancestors="false" :preload-siblings="false">
           <template #imageryLayers="{ globeEvents }">
-            <cs-imagery-layer
-              :globeEvents="globeEvents"
-              :show="true"
-              :index="0"
-            >
+            <cs-imagery-layer :globeEvents="globeEvents" :show="true" :index="0">
               <template #default="{ registerImageryProvider }">
-                <cs-url-template-imagery-provider
-                  :registerImageryProvider="registerImageryProvider"
-                  :tilingScheme="tilingScheme"
-                  url="https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI_wgs84/MapServer/tile/{z}/{y}/{x}"
-                  :maximumLevel="9"
-                />
+                <cs-url-template-imagery-provider :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" url="https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI_wgs84/MapServer/tile/{z}/{y}/{x}" :maximumLevel="9" />
               </template>
             </cs-imagery-layer>
             <cs-mvt-imagery-layer :globeEvents="globeEvents" :show="true" :index="1" :csEvents="csEvents" dataSourceName="mvt">
               <template #default="{ registerImageryProvider }">
-                <cs-mvt-imagery-provider
-                  :csEvents="csEvents"
-                  dataSourceName="mvt"
-                  :entityFactory="entityFactory"
-                  :registerImageryProvider="registerImageryProvider"
-                  :tilingScheme="tilingScheme"
-                  url="https://cslater-dev-echofish-118234403147-echofish-dev-output.s3.us-west-2.amazonaws.com/spatial/mvt/cruise/Henry_B._Bigelow/HB0707/EK60/{z}/{x}/{y}.pbf"
-                  :maximumLevel="9"
-                />
+                <cs-mvt-imagery-provider :csEvents="csEvents" dataSourceName="mvt" :entityFactory="entityFactory" :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" :url="mvtUrl" :maximumLevel="8" />
               </template>
             </cs-mvt-imagery-layer>
           </template>
@@ -69,7 +52,9 @@ import FeatureNameContainer from '@/views/view/echofish/map/FeatureNameContainer
 import MapMouseHandler from '@/views/view/echofish/map/MapMouseHandler';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
 import { reactive } from 'vue';
+import { ZARR_BASE_URL } from '@/basePath';
 
+const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/cruise/Henry_B._Bigelow/HB0707/EK60/{z}/{x}/{y}.pbf`;
 const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());
