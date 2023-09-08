@@ -23,7 +23,7 @@
 <script setup lang="ts">
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import L, {
-  Coords, DoneCallback, GridLayerOptions, LatLngTuple, Point, TileEvent, TileEventHandlerFn,
+  Coords, DoneCallback, GridLayerOptions, LatLngTuple, LeafletMouseEvent, Point, TileEvent, TileEventHandlerFn,
 } from 'leaflet';
 import {
   computed, onMounted, ref, watch, reactive,
@@ -38,6 +38,7 @@ import { scaleLinear, scaleThreshold } from 'd3-scale';
 import * as d3 from 'd3';
 import { colorPalettes, defaultColorPalette } from '@/views/view/echofish/cruise/WaterColumnColors';
 import { RawArray } from 'zarr/types/rawArray';
+import lIcon from 'leaflet/dist/images/marker-icon.png';
 
 const props = defineProps<{
   shipName: string;
@@ -52,8 +53,7 @@ const router = useRouter();
 const zoom = ref(0);
 const center = ref<LatLngTuple | undefined>();
 const maxBounds = ref([[0, 0], [0, 0]]);
-const svMarker = ref([-204, 113503]);
-const svVisible = ref(false);
+const svMarker = ref<L.LatLng | undefined>();
 const map = ref(null);
 const shipName = computed(() => props.shipName);
 const cruiseName = computed(() => props.cruiseName);
@@ -74,6 +74,19 @@ const svArray = ref<ZarrArray | undefined>();
 const frequencies = ref<number[]>([]);
 
 const visibleCanvases = reactive(new Map<string, HTMLCanvasElement>());
+const lMap = ref<L.Map | undefined>();
+const marker = ref<L.Marker | undefined>();
+
+watch(svMarker, (newValue, oldValue) => {
+  if (newValue && lMap.value) {
+    if (!oldValue) {
+      marker.value = L.marker(newValue, { icon: L.icon({ iconUrl: lIcon }) });
+      marker.value?.addTo(lMap.value);
+    } else {
+      marker.value?.setLatLng(newValue);
+    }
+  }
+});
 
 function drawTile(key: string, canvas: HTMLCanvasElement) {
   const parts = key.split('_');
@@ -136,10 +149,27 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
   }
 }
 
+function cursorUpdated(e: LeafletMouseEvent) {
+  const cursorLocation = e.latlng;
+  svMarker.value = cursorLocation;
+  this.updateCursorValues({
+    storeIndex: Math.floor(cursorLocation.lng),
+    depthMeters: cursorLocation.lat.toFixed(2),
+  });
+
+  this.onSelectPoint({
+    lat: this.selectedLat,
+    lon: this.selectedLon,
+    epochMillis: this.selectedTimestampMillis,
+    depthMeters: this.selectedDepthMeters,
+  });
+  this.toggleSidebar();
+}
+
 onMounted(() => {
   center.value = [-1 * depthIndex.value, storeIndex.value];
   if (map.value) {
-    const lMap = L.map(map.value, {
+    lMap.value = L.map(map.value, {
       crs: L.CRS.Simple,
       zoom: zoom.value,
       center: center.value,
@@ -147,7 +177,9 @@ onMounted(() => {
       maxZoom: 0,
       zoomControl: false,
     });
-    lMap.addControl(new L.Control.Zoom({ position: 'bottomright' }));
+    lMap.value.addControl(new L.Control.Zoom({ position: 'bottomright' }));
+
+    lMap.value.on('click', cursorUpdated);
 
     const Custom = L.GridLayer.extend({
 
@@ -172,7 +204,7 @@ onMounted(() => {
       visibleCanvases.delete(`${coords.x}_${coords.y}_${coords.z}`);
     });
 
-    lMap.addLayer(layer);
+    lMap.value.addLayer(layer);
   }
 
   const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName.value}/${cruiseName.value}/${sensorName.value}/${cruiseName.value}.zarr`);
@@ -250,24 +282,5 @@ function mapCenterUpdated(c: any) {
 //       commit('selectedDataSlice', Array.from(x[4].data));
 //     });
 // }
-
-function cursorUpdated(e: any) {
-  console.log(e);
-  // const cursorLocation = e.latlng;
-  // svMarker.value = cursorLocation;
-  // svVisible.value = true;
-  // this.updateCursorValues({
-  //   storeIndex: Math.floor(cursorLocation.lng),
-  //   depthMeters: cursorLocation.lat.toFixed(2),
-  // });
-  //
-  // this.onSelectPoint({
-  //   lat: this.selectedLat,
-  //   lon: this.selectedLon,
-  //   epochMillis: this.selectedTimestampMillis,
-  //   depthMeters: this.selectedDepthMeters,
-  // });
-  // this.toggleSidebar();
-}
 
 </script>
