@@ -1,36 +1,19 @@
 <template>
   <div class="echogram-container">
     <div ref="map" />
-    <!--    <l-map-->
-    <!--      v-if="center.length"-->
-    <!--      :crs="CRS.Simple"-->
-    <!--      :zoom="zoom"-->
-    <!--      :center="center"-->
-    <!--      :minZoom="0"-->
-    <!--      :maxZoom="0"-->
-    <!--      :maxBounds="maxBounds"-->
-    <!--      @click="cursorUpdated"-->
-    <!--      @update:center="mapCenterUpdated"-->
-    <!--      :options="{ zoomControl: false }"-->
-    <!--    >-->
-    <!--      <l-marker v-if="svVisible" :lat-lng="svMarker" />-->
-    <!--      <l-grid-layer :tileSize="512" />-->
-    <!--      <l-control-zoom position="bottomright" />-->
-    <!--    </l-map>-->
   </div>
 </template>
 
 <script setup lang="ts">
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import L, {
-  Coords, DoneCallback, GridLayerOptions, LatLngTuple, LeafletMouseEvent, Point, TileEvent, TileEventHandlerFn,
+  Coords, LatLngTuple, LeafletMouseEvent, TileEvent,
 } from 'leaflet';
 import {
   computed, onMounted, ref, watch, reactive,
 } from 'vue';
-import { useRouter } from 'vue-router';
+// import { useRouter } from 'vue-router';
 import {
-  HTTPStore, openArray, ZarrArray, slice, NestedArray,
+  HTTPStore, openArray, ZarrArray, slice,
 } from 'zarr';
 import { ZARR_BASE_URL } from '@/basePath';
 import { color } from 'd3-color';
@@ -39,6 +22,7 @@ import * as d3 from 'd3';
 import { colorPalettes, defaultColorPalette } from '@/views/view/echofish/cruise/WaterColumnColors';
 import { RawArray } from 'zarr/types/rawArray';
 import lIcon from 'leaflet/dist/images/marker-icon.png';
+import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
 
 const props = defineProps<{
   shipName: string;
@@ -49,10 +33,10 @@ const props = defineProps<{
   frequency: number;
 }>();
 
-const router = useRouter();
+// const router = useRouter();
 const zoom = ref(0);
 const center = ref<LatLngTuple | undefined>();
-const maxBounds = ref([[0, 0], [0, 0]]);
+// const maxBounds = ref([[0, 0], [0, 0]]);
 const svMarker = ref<L.LatLng | undefined>();
 const map = ref(null);
 const shipName = computed(() => props.shipName);
@@ -72,10 +56,13 @@ const frequencyArray = ref<ZarrArray | undefined>();
 const svArray = ref<ZarrArray | undefined>();
 
 const frequencies = ref<number[]>([]);
+const selectedPoint = ref<SelectedEchogramPoint | undefined>();
 
 const visibleCanvases = reactive(new Map<string, HTMLCanvasElement>());
 const lMap = ref<L.Map | undefined>();
 const marker = ref<L.Marker | undefined>();
+
+const emit = defineEmits(['updateFrequencies', 'updateSelectedPoint']);
 
 watch(svMarker, (newValue, oldValue) => {
   if (newValue && lMap.value) {
@@ -86,6 +73,14 @@ watch(svMarker, (newValue, oldValue) => {
       marker.value?.setLatLng(newValue);
     }
   }
+});
+
+watch(frequencies, (newValue) => {
+  emit('updateFrequencies', newValue);
+});
+
+watch(selectedPoint, (newValue) => {
+  emit('updateSelectedPoint', newValue);
 });
 
 function drawTile(key: string, canvas: HTMLCanvasElement) {
@@ -149,21 +144,48 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
   }
 }
 
-function cursorUpdated(e: LeafletMouseEvent) {
-  const cursorLocation = e.latlng;
-  svMarker.value = cursorLocation;
-  this.updateCursorValues({
-    storeIndex: Math.floor(cursorLocation.lng),
-    depthMeters: cursorLocation.lat.toFixed(2),
-  });
+watch(svMarker, (latLon) => {
+  if (latLon) {
+    const echogramPoint = new SelectedEchogramPoint();
+    echogramPoint.storeIndex = Math.floor(latLon.lng);
+    echogramPoint.depthMeters = latLon.lat;
 
-  this.onSelectPoint({
-    lat: this.selectedLat,
-    lon: this.selectedLon,
-    epochMillis: this.selectedTimestampMillis,
-    depthMeters: this.selectedDepthMeters,
-  });
-  this.toggleSidebar();
+    const depthAbs = Math.abs(echogramPoint.depthMeters);
+
+    Promise.all(
+      [latitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+        longitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+        timeArray.value?.get(slice(storeIndex.value, storeIndex.value + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+        svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1), null]).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]),
+      ],
+    ).then(([latitude, longitude, timestamp, dataSlice]) => {
+      echogramPoint.latitude = latitude;
+      echogramPoint.longitude = longitude;
+      echogramPoint.timestamp = timestamp;
+      echogramPoint.dataSlice = dataSlice || [];
+      const frequencyIndex = frequencies.value.indexOf(frequency.value);
+      if (frequencyIndex >= 0 && dataSlice) {
+        echogramPoint.sv = dataSlice[frequencyIndex];
+      }
+      selectedPoint.value = echogramPoint;
+    });
+  }
+});
+
+function cursorUpdated(e: LeafletMouseEvent) {
+  svMarker.value = e.latlng;
+  // this.updateCursorValues({
+  //   storeIndex: Math.floor(cursorLocation.lng),
+  //   depthMeters: cursorLocation.lat.toFixed(2),
+  // });
+  //
+  // this.onSelectPoint({
+  //   lat: this.selectedLat,
+  //   lon: this.selectedLon,
+  //   epochMillis: this.selectedTimestampMillis,
+  //   depthMeters: this.selectedDepthMeters,
+  // });
+  // this.toggleSidebar();
 }
 
 onMounted(() => {
@@ -239,48 +261,27 @@ onMounted(() => {
     });
 });
 
-function onMoveEchogram(nextStoreIndex: number, nextDepthIndex: number) {
-  router.push({
-    name: 'cruise',
-    params: {
-      shipName: shipName.value,
-      cruiseName: cruiseName.value,
-      sensorName: sensorName.value,
-      storeIndex: nextStoreIndex,
-      depthIndex: nextDepthIndex,
-      frequency: frequency.value,
-    },
-  });
-}
+// function onMoveEchogram(nextStoreIndex: number, nextDepthIndex: number) {
+//   router.push({
+//     name: 'cruise',
+//     params: {
+//       shipName: shipName.value,
+//       cruiseName: cruiseName.value,
+//       sensorName: sensorName.value,
+//       storeIndex: nextStoreIndex,
+//       depthIndex: nextDepthIndex,
+//       frequency: frequency.value,
+//     },
+//   });
+// }
 
-function mapCenterUpdated(c: any) {
-  console.log(c);
-  if (c && svArray.value) {
-    const nextStoreIndex = Math.min(Math.round(c.lng), svArray.value.shape[1]);
-    const nextDepthIndex = Math.min(Math.round(-1 * c.lat), svArray.value.shape[0]);
-    onMoveEchogram(nextStoreIndex, nextDepthIndex);
-  }
-}
-
-// function updateCursorValues() {
-//   const depthAbs = Math.abs(parseFloat(depthMeters));
-//   const latitude = latitudeArray.value?.get(slice(storeIndex.value, storeIndex.value + 1)).then((z: any) => (Array.from((z).data)[0] as number).toFixed(5));
-//   const longitude = longitudeArray.value?.get(slice(storeIndex.value, storeIndex.value + 1)).then((z: any) => (Array.from(z.data)[0] as number).toFixed(5));
-//   const timestamp = timeArray.value?.get(slice(storeIndex.value, storeIndex.value + 1)).then((z: any) => (Array.from(z.data)[0] as number));
-//   const data = svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(storeIndex.value, storeIndex.value + 1), 0]).then((z) => z);
-//   const dataSlice = svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(storeIndex.value, storeIndex.value + 1), null]).then((z) => z);
-//   // dataSlice will be used for plotting the line graph
-//
-//   Promise.all([timestamp, latitude, longitude, data, dataSlice])
-//     .then((x) => {
-//     // ({time: x[0], lat: x[1], lon: x[2]})
-//       commit('selectedTimestampMillis', x[0]);
-//       commit('selectedLat', x[1]);
-//       commit('selectedLon', x[2]);
-//       commit('selectedDepthMeters', depthMeters);
-//       commit('selectedDataValue', Array.from(x[3].data)[0]); // TODO: is this correct for selected frequency?
-//       commit('selectedDataSlice', Array.from(x[4].data));
-//     });
+// function mapCenterUpdated(c: any) {
+//   console.log(c);
+//   if (c && svArray.value) {
+//     const nextStoreIndex = Math.min(Math.round(c.lng), svArray.value.shape[1]);
+//     const nextDepthIndex = Math.min(Math.round(-1 * c.lat), svArray.value.shape[0]);
+//     onMoveEchogram(nextStoreIndex, nextDepthIndex);
+//   }
 // }
 
 </script>

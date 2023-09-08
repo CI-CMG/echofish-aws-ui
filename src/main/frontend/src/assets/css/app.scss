@@ -8,11 +8,12 @@
     bottom: 0;
     left: 0;
     right: 0;
-    .cesium-viewer {
-      .cesium-viewer-bottom {
-        display: none;
-      }
-    }
+  }
+}
+
+.cesium-viewer {
+  .cesium-viewer-bottom {
+    display: none;
   }
 }
 
@@ -82,6 +83,7 @@
   height: 100%;
   .echogram-container {
     position: absolute;
+    z-index: 0;
     top: 0;
     bottom: 0;
     left: 0;
@@ -94,4 +96,14 @@
       right: 0;
     }
   }
+}
+
+.echogram-globe {
+  position: relative;
+  width: 100%;
+}
+.multiFrequencyPlot {
+  position: relative;
+  width: 100%;
+  background-color: white;
 }
