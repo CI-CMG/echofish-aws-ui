@@ -18,7 +18,7 @@
             </cs-imagery-layer>
             <cs-mvt-imagery-layer :globeEvents="globeEvents" :show="true" :index="1" :csEvents="csEvents" dataSourceName="mvt">
               <template #default="{ registerImageryProvider }">
-                <cs-mvt-imagery-provider :csEvents="csEvents" dataSourceName="mvt" :entityFactory="entityFactory" :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" :url="mvtUrl" :maximumLevel="8" />
+                <cs-mvt-imagery-provider :csEvents="csEvents" dataSourceName="mvt" :entityFactory="entityFactory" :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" :url="mvtUrl" :maximumLevel="7" />
               </template>
             </cs-mvt-imagery-layer>
           </template>
