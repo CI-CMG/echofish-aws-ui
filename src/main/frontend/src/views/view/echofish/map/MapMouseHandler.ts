@@ -40,8 +40,17 @@ export default class MapMouseHandler {
         this.clearFeatureNameContainer();
         this.handleEntityClick(Cesium.Math.toDegrees(cartographic.longitude), Cesium.Math.toDegrees(cartographic.latitude), pickedFeatures[0]);
       } else if (pickedFeatures.length > 1) {
-        this.updateFeatureNameContainer(pickedFeatures, event.position, true);
-        this.fnc.fncLocked = true;
+        const deDup: CesiumEntityMapType = {};
+        pickedFeatures.forEach((entity) => {
+          deDup[`${entity.properties?.getValue(Cesium.JulianDate.now()).shipName}_${entity.properties?.getValue(Cesium.JulianDate.now()).cruiseName}_${entity.properties?.getValue(Cesium.JulianDate.now()).sensorName}`] = entity;
+        });
+        if (Object.values(deDup).length === 1) {
+          this.clearFeatureNameContainer();
+          this.handleEntityClick(Cesium.Math.toDegrees(cartographic.longitude), Cesium.Math.toDegrees(cartographic.latitude), Object.values(deDup)[0]);
+        } else {
+          this.updateFeatureNameContainer(pickedFeatures, event.position, true);
+          this.fnc.fncLocked = true;
+        }
       } else if (this.fnc.fncLocked) {
         this.clearFeatureNameContainer();
       }

@@ -6,7 +6,7 @@
           <td>{{ entity.properties.getValue(Cesium.JulianDate.now()).shipName }}</td>
           <td>{{ entity.properties.getValue(Cesium.JulianDate.now()).cruiseName }}</td>
           <td>{{ entity.properties.getValue(Cesium.JulianDate.now()).sensorName }}</td>
-          <td v-if="selectable"><v-btn color="secondary" icon="mdi-information-outline" :size="30" :min-height="0" :min-width="0" @click="emit('select', entity)" /></td>
+          <td v-if="selectable"><v-btn color="secondary" icon="mdi-information-outline" :size="30" :min-height="0" :min-width="0" @click="emit('select', longitude, latitude, entity)" /></td>
         </tr>
         <tr>
           <td :colspan="selectable ? 4 : 3">{{`${longitude}° E/W, ${latitude}° N/S`}}</td>
