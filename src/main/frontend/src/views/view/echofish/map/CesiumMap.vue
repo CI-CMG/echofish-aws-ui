@@ -57,7 +57,7 @@ import { Router, useRouter } from 'vue-router';
 
 const router: Router = useRouter();
 
-const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/cruise/Henry_B._Bigelow/HB0707/EK60/{z}/{x}/{y}.pbf`;
+const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/global/{z}/{x}/{y}.pbf`;
 const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());
