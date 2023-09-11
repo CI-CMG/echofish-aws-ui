@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import L, {
-  Coords, LatLngTuple, LeafletMouseEvent, TileEvent,
+  Coords, LatLng, LatLngTuple, LeafletMouseEvent, TileEvent,
 } from 'leaflet';
 import {
   computed, onMounted, ref, watch, reactive,
@@ -155,7 +155,7 @@ watch(svMarker, (latLon) => {
     Promise.all(
       [latitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
         longitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
-        timeArray.value?.get(slice(storeIndex.value, storeIndex.value + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+        timeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
         svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1), null]).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]),
       ],
     ).then(([latitude, longitude, timestamp, dataSlice]) => {
@@ -258,6 +258,8 @@ onMounted(() => {
       visibleCanvases.forEach((canvas, key) => {
         drawTile(key, canvas);
       });
+      const latlon = new LatLng(0, storeIndex.value);
+      svMarker.value = latlon;
     });
 });
 
