@@ -1,5 +1,7 @@
 import EntityFactory from '@/lib/cesium-mvt/EntityFactory';
-import { Color, Entity } from 'cesium';
+import {
+  ArcType, Color, Entity,
+} from 'cesium';
 
 type Point = {
   x: number,
@@ -50,6 +52,7 @@ export default class MvtEntityFactory implements EntityFactory {
       polyline: {
         width: 3,
         material: Color.fromCssColorString(colorMap[hashCode(layer.name) % colorMap.length]),
+        arcType: ArcType.GEODESIC,
       },
       properties: feature.properties,
     };
