@@ -1,6 +1,9 @@
 <template>
   <div class="echogram-container">
     <div ref="map" />
+    <div ref="icon">
+      <v-icon>mdi-home</v-icon>
+    </div>
   </div>
 </template>
 
@@ -9,7 +12,7 @@ import L, {
   Coords, LatLng, LatLngTuple, LeafletMouseEvent, TileEvent,
 } from 'leaflet';
 import {
-  computed, onMounted, ref, watch, reactive,
+  computed, onMounted, ref, watch, reactive, ComputedRef,
 } from 'vue';
 // import { useRouter } from 'vue-router';
 import {
@@ -21,8 +24,9 @@ import { scaleLinear, scaleThreshold } from 'd3-scale';
 import * as d3 from 'd3';
 import { colorPalettes } from '@/views/view/echofish/cruise/WaterColumnColors';
 import { RawArray } from 'zarr/types/rawArray';
-import lIcon from 'leaflet/dist/images/marker-icon.png';
+// import lIcon from 'leaflet/dist/images/marker-icon.png';
 import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
+import EchogramCenter from '@/views/view/echofish/cruise/EchogramCenter';
 
 const props = defineProps<{
   shipName: string;
@@ -39,10 +43,11 @@ const props = defineProps<{
 
 // const router = useRouter();
 const zoom = ref(0);
-const center = ref<LatLngTuple | undefined>();
+
 // const maxBounds = ref([[0, 0], [0, 0]]);
 const svMarker = ref<L.LatLng | undefined>();
 const map = ref(null);
+const icon = ref(null);
 
 const shipName = computed(() => props.shipName);
 const cruiseName = computed(() => props.cruiseName);
@@ -53,6 +58,8 @@ const frequency = computed(() => props.frequency);
 const frequencies = computed(() => props.frequencies);
 const min = computed(() => props.min);
 const max = computed(() => props.max);
+
+const center: ComputedRef<LatLngTuple> = computed(() => [-1 * depthIndex.value, storeIndex.value]);
 
 const selectedColorPalette = computed(() => props.selectedColorPalette);
 const palette = computed(() => colorPalettes[selectedColorPalette.value]);
@@ -69,13 +76,18 @@ const visibleCanvases = reactive(new Map<string, HTMLCanvasElement>());
 const lMap = ref<L.Map | undefined>();
 const marker = ref<L.Marker | undefined>();
 
-const emit = defineEmits(['updateSelectedPoint']);
+const emit = defineEmits(['updateSelectedPoint', 'updateLocation']);
 
 watch(svMarker, (newValue, oldValue) => {
   if (newValue && lMap.value) {
     if (!oldValue) {
-      marker.value = L.marker(newValue, { icon: L.icon({ iconUrl: lIcon }) });
-      marker.value?.addTo(lMap.value);
+      const svgIcon = L.divIcon({
+        html: '<i style="font-size: 30px; height: 30px; width: 30px;" class="mdi-crosshairs-gps mdi v-icon notranslate v-theme--myCustomLightTheme" aria-hidden="true"></i>',
+        className: 'echogram-marker',
+        iconSize: [30, 30],
+      });
+      marker.value = L.marker([0, 0], { icon: svgIcon });
+      marker.value.addTo(lMap.value);
     } else {
       marker.value?.setLatLng(newValue);
     }
@@ -144,29 +156,35 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
   }
 }
 
+function getLocationInfo(latLon: LatLng) : Promise<SelectedEchogramPoint> {
+  const echogramPoint = new SelectedEchogramPoint();
+  echogramPoint.storeIndex = Math.floor(latLon.lng);
+  echogramPoint.depthMeters = latLon.lat;
+
+  const depthAbs = Math.abs(echogramPoint.depthMeters);
+
+  return Promise.all(
+    [latitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+      longitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+      timeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
+      svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1), null]).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]),
+    ],
+  ).then(([latitude, longitude, timestamp, dataSlice]) => {
+    echogramPoint.latitude = latitude;
+    echogramPoint.longitude = longitude;
+    echogramPoint.timestamp = timestamp;
+    echogramPoint.dataSlice = dataSlice || [];
+    const frequencyIndex = frequencies.value.indexOf(frequency.value);
+    if (frequencyIndex >= 0 && dataSlice) {
+      echogramPoint.sv = dataSlice[frequencyIndex];
+    }
+    return echogramPoint;
+  });
+}
+
 watch(svMarker, (latLon) => {
   if (latLon) {
-    const echogramPoint = new SelectedEchogramPoint();
-    echogramPoint.storeIndex = Math.floor(latLon.lng);
-    echogramPoint.depthMeters = latLon.lat;
-
-    const depthAbs = Math.abs(echogramPoint.depthMeters);
-
-    Promise.all(
-      [latitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
-        longitudeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
-        timeArray.value?.get(slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1)).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]).then((a) => a[0]),
-        svArray.value?.getRaw([slice(depthAbs, depthAbs + 1), slice(echogramPoint.storeIndex, echogramPoint.storeIndex + 1), null]).then((nestedArray: any) => Array.from(nestedArray.data)).then((a) => a as number[]),
-      ],
-    ).then(([latitude, longitude, timestamp, dataSlice]) => {
-      echogramPoint.latitude = latitude;
-      echogramPoint.longitude = longitude;
-      echogramPoint.timestamp = timestamp;
-      echogramPoint.dataSlice = dataSlice || [];
-      const frequencyIndex = frequencies.value.indexOf(frequency.value);
-      if (frequencyIndex >= 0 && dataSlice) {
-        echogramPoint.sv = dataSlice[frequencyIndex];
-      }
+    getLocationInfo(latLon).then((echogramPoint) => {
       selectedPoint.value = echogramPoint;
     });
   }
@@ -174,18 +192,6 @@ watch(svMarker, (latLon) => {
 
 function cursorUpdated(e: LeafletMouseEvent) {
   svMarker.value = e.latlng;
-  // this.updateCursorValues({
-  //   storeIndex: Math.floor(cursorLocation.lng),
-  //   depthMeters: cursorLocation.lat.toFixed(2),
-  // });
-  //
-  // this.onSelectPoint({
-  //   lat: this.selectedLat,
-  //   lon: this.selectedLon,
-  //   epochMillis: this.selectedTimestampMillis,
-  //   depthMeters: this.selectedDepthMeters,
-  // });
-  // this.toggleSidebar();
 }
 
 function drawTiles() {
@@ -194,9 +200,23 @@ function drawTiles() {
   });
 }
 
-function load() {
-  // center.value = [-1 * depthIndex.value, storeIndex.value];
+function moveend() {
+  if (lMap.value) {
+    const latlon = lMap.value?.getCenter();
+    if (latlon) {
+      getLocationInfo(latlon).then((point) => {
+        const eCenter = new EchogramCenter();
+        eCenter.depthIndex = -Math.floor(latlon?.lat);
+        eCenter.storeIndex = Math.floor(latlon?.lng);
+        eCenter.longitude = point.longitude;
+        eCenter.latitude = point.latitude;
+        emit('updateLocation', eCenter);
+      });
+    }
+  }
+}
 
+function load() {
   const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName.value}/${cruiseName.value}/${sensorName.value}/${cruiseName.value}.zarr`);
   const depthPromise = openArray({ store, path: 'depth', mode: 'r' });
   const timePromise = openArray({ store, path: 'time', mode: 'r' });
@@ -220,11 +240,12 @@ function load() {
     drawTiles();
     const latlon = new LatLng(0, storeIndex.value);
     svMarker.value = latlon;
+  }).then(() => {
+    moveend();
   });
 }
 
 onMounted(() => {
-  center.value = [-1 * depthIndex.value, storeIndex.value];
   if (map.value) {
     lMap.value = L.map(map.value, {
       crs: L.CRS.Simple,
@@ -234,9 +255,10 @@ onMounted(() => {
       maxZoom: 0,
       zoomControl: false,
     });
-    lMap.value.addControl(new L.Control.Zoom({ position: 'bottomright' }));
+    // lMap.value.addControl(new L.Control.Zoom({ position: 'bottomright' }));
 
     lMap.value.on('click', cursorUpdated);
+    lMap.value.on('moveend', moveend);
 
     const Custom = L.GridLayer.extend({
 
@@ -270,6 +292,24 @@ watch(frequency, () => {
   load();
 });
 
+watch(shipName, (value) => {
+  if (shipName.value !== value) {
+    load();
+  }
+});
+
+watch(cruiseName, (value) => {
+  if (cruiseName.value !== value) {
+    load();
+  }
+});
+
+watch(sensorName, (value) => {
+  if (sensorName.value !== value) {
+    load();
+  }
+});
+
 watch(palette, () => {
   drawTiles();
 });
@@ -281,28 +321,5 @@ watch(min, () => {
 watch(max, () => {
   drawTiles();
 });
-
-// function onMoveEchogram(nextStoreIndex: number, nextDepthIndex: number) {
-//   router.push({
-//     name: 'cruise',
-//     params: {
-//       shipName: shipName.value,
-//       cruiseName: cruiseName.value,
-//       sensorName: sensorName.value,
-//       storeIndex: nextStoreIndex,
-//       depthIndex: nextDepthIndex,
-//       frequency: frequency.value,
-//     },
-//   });
-// }
-
-// function mapCenterUpdated(c: any) {
-//   console.log(c);
-//   if (c && svArray.value) {
-//     const nextStoreIndex = Math.min(Math.round(c.lng), svArray.value.shape[1]);
-//     const nextDepthIndex = Math.min(Math.round(-1 * c.lat), svArray.value.shape[0]);
-//     onMoveEchogram(nextStoreIndex, nextDepthIndex);
-//   }
-// }
 
 </script>

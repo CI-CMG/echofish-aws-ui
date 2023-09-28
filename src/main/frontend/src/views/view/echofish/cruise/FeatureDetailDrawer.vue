@@ -20,7 +20,7 @@
       <v-card-text>
         <v-row>
           <div class="echogram-globe">
-            <cesium-map />
+            <cesium-map :fly-to="flyTo" :location-entities="locationEntities" />
           </div>
         </v-row>
         <v-row>
@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import * as Cesium from 'cesium';
 import CesiumMap from '@/views/view/echofish/map/CesiumMap.vue';
 import MultiFrequencyPlot from '@/views/view/echofish/cruise/MultiFrequencyPlot.vue';
 import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
@@ -109,6 +110,7 @@ const props = withDefaults(defineProps< {
   min: number,
   max: number,
   selectedEchogramPoint?: SelectedEchogramPoint,
+  flyTo: Cesium.Cartesian3,
 }>(), {
   selectedEchogramPoint: undefined,
 });
@@ -144,6 +146,21 @@ type FreqItem = {
 
 const min = computed(() => props.min);
 const max = computed(() => props.max);
+
+const flyTo = computed(() => props.flyTo);
+
+const locationEntities = computed(() => [new Cesium.Entity({
+  position: new Cesium.Cartesian3(flyTo.value.x, flyTo.value.y, flyTo.value.z),
+  ellipse: {
+    semiMinorAxis: 5000,
+    semiMajorAxis: 5000,
+    height: 10,
+    material: Cesium.Color.TRANSPARENT,
+    outline: true, // height must be set for outline to display
+    outlineColor: Cesium.Color.MAGENTA,
+    outlineWidth: new Cesium.ConstantProperty(24),
+  },
+})]);
 
 const minDeb = ref(`${min.value}`);
 const maxDeb = ref(`${max.value}`);

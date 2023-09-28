@@ -1,12 +1,13 @@
 <template>
   <div>
-    <cs-viewer>
+    <cs-viewer :flyTo="flyTo">
       <template #screenSpaceEventHandler="{ csEvents }">
         <cs-screen-space-positioned-event-action :cs-events="csEvents" :type="Cesium.ScreenSpaceEventType.LEFT_CLICK" @input="mapMouseHandler.handleLeftClick" />
         <cs-screen-space-positioned-event-action :cs-events="csEvents" :type="Cesium.ScreenSpaceEventType.MOUSE_MOVE" @input="mapMouseHandler.handleMouseMove" />
       </template>
       <template #dataSources="{ csEvents }">
         <cs-mvt-data-source :cs-events="csEvents" name="mvt" :index="0" :show="true" />
+        <cs-custom-data-source :cs-events="csEvents" :entities="locationEntities" :index="1" name="location" :show="true" />
       </template>
       <template #globe="{ csEvents }">
         <cs-globe :cs-events="csEvents" :tile-cache-size="0" :preload-ancestors="false" :preload-siblings="false">
@@ -51,9 +52,11 @@ import CsScreenSpacePositionedEventAction from '@/lib/cesium-vue/vue/CsScreenSpa
 import FeatureNameContainer from '@/views/view/echofish/map/FeatureNameContainer.vue';
 import MapMouseHandler from '@/views/view/echofish/map/MapMouseHandler';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import { ZARR_BASE_URL } from '@/basePath';
 import { Router, useRouter } from 'vue-router';
+import FlyToOptions from '@/lib/cesium-vue/api/FlyToOptions';
+import CsCustomDataSource from '@/lib/cesium-vue/vue/CsCustomDataSource.vue';
 
 const router: Router = useRouter();
 
@@ -65,4 +68,16 @@ const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());
 const mapMouseHandler = new MapMouseHandler(fnc, router);
+
+const props = withDefaults(defineProps< {
+  flyTo?: Cesium.Cartesian3;
+  locationEntities?: Cesium.Entity[];
+}>(), {
+  flyTo: () => Cesium.Cartesian3.fromDegrees(0, 0, 15000000),
+  locationEntities: () => [],
+});
+
+const flyToCoords = computed(() => props.flyTo);
+
+const flyTo = computed(() => ({ destination: flyToCoords.value } as FlyToOptions));
 </script>

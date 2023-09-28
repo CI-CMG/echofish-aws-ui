@@ -118,3 +118,10 @@
   }
 
 }
+
+.leaflet-grab {
+  cursor: auto;
+}
+.leaflet-dragging .leaflet-grab{
+  cursor: move;
+}

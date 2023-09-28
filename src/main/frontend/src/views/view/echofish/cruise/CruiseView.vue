@@ -17,6 +17,7 @@
       :drawer="drawer"
       :frequencies="frequencies"
       :selected-echogram-point="selectedEchogramPoint"
+      :fly-to="flyTo"
     />
     <echogram
       v-if="frequencies.length"
@@ -31,6 +32,7 @@
       :max="max"
       :selected-color-palette="selectedColorPalette"
       @update-selected-point="updateSelectedEchogramPoint"
+      @update-location="updateLocation"
     />
     <v-container style="position: absolute; top: 0; left: 0; right: 0;" fluid class="pa-0">
       <v-row no-gutters>
@@ -51,102 +53,7 @@
                   <v-btn v-bind="props" rounded variant="flat" color="secondary" icon="mdi-earth" @click="goToMap" />
                 </template>
               </v-tooltip>
-              <!--              <v-tooltip location="bottom" text="Toggle 2D / 3D">-->
-              <!--                <template #activator="{ props }">-->
-              <!--                  <v-btn-->
-              <!--                      v-bind="props"-->
-              <!--                      variant="flat"-->
-              <!--                      :icon="twoDimensional ? 'mdi-earth' : 'mdi-earth-box'"-->
-              <!--                      color="secondary"-->
-              <!--                      @click="twoDimensional = !twoDimensional"-->
-              <!--                      :disabled="flyTo && flyTo.destinationIsPolar ? flyTo.destinationIsPolar : false"-->
-              <!--                  />-->
-              <!--                </template>-->
-              <!--              </v-tooltip>-->
-              <!--              <v-menu-->
-              <!--                  :close-on-content-click="false"-->
-              <!--                  v-model="measureToolMenu"-->
-              <!--                  :width="300"-->
-              <!--                  :persistent="true"-->
-              <!--                  :no-click-animation="true"-->
-              <!--              >-->
-              <!--                <template v-slot:activator="{ props }">-->
-              <!--                  <v-btn color="secondary" class="v-btn&#45;&#45;icon" v-bind="props" variant="flat">-->
-              <!--                    <v-icon icon="mdi-ruler" />-->
-              <!--                    <v-tooltip location="bottom" activator="parent">Measure Tool</v-tooltip>-->
-              <!--                  </v-btn>-->
-              <!--                </template>-->
-              <!--                <v-card>-->
-              <!--                  <v-card-title>Measure Tool</v-card-title>-->
-              <!--                  <v-card-text>-->
-              <!--                    <v-list>-->
-              <!--                      <v-list-item v-for="(key, i) in measureLinesKeys" :key="i">-->
-              <!--                        <v-row no-gutters align="center" class="pt-1 pb-1">-->
-              <!--                          <v-col class="text-left">-->
-              <!--                            <v-badge v-if="key === activeMeasureLineId" dot color="success">-->
-              <!--                              <v-avatar variant="tonal" :color="measureLines[key]?.color.toCssColorString()">-->
-              <!--                                {{ i + 1 }}-->
-              <!--                              </v-avatar>-->
-              <!--                            </v-badge>-->
-              <!--                            <v-avatar style="cursor: pointer;" v-else variant="tonal" :color="measureLines[key]?.color.toCssColorString()" @click="setActiveMeasureLine(key)">-->
-              <!--                              {{ i + 1 }}-->
-              <!--                            </v-avatar>-->
-              <!--                          </v-col>-->
-              <!--                          <v-col class="text-center" style="min-width: 150px;">-->
-              <!--                            {{ measureLines[key]?.distance ? measureLines[key]?.distance : '0 m' }}-->
-              <!--                          </v-col>-->
-              <!--                          <v-col class="text-right">-->
-              <!--                            <v-btn color="secondary" icon="mdi-minus" variant="text" size="small" @click="removeMeasureLine(key)" />-->
-              <!--                          </v-col>-->
-              <!--                        </v-row>-->
-              <!--                      </v-list-item>-->
-              <!--                    </v-list>-->
-              <!--                    <v-btn icon="mdi-plus" :disabled="measureLinesKeys.length >= 5" @click="addMeasureLine" variant="text" size="small" />-->
-              <!--                  </v-card-text>-->
-              <!--                </v-card>-->
-              <!--              </v-menu>-->
-
-              <!--              <v-menu :close-on-content-click="false" v-model="dialog">-->
-              <!--                <template v-slot:activator="{ props }">-->
-              <!--                  <v-btn-->
-              <!--                      class="v-btn&#45;&#45;icon"-->
-              <!--                      variant="flat"-->
-              <!--                      color="secondary"-->
-              <!--                      v-bind="props"-->
-              <!--                  >-->
-              <!--                    <v-icon icon="mdi-layers" />-->
-              <!--                    <v-tooltip location="bottom" activator="parent">Map Layers & Settings</v-tooltip>-->
-              <!--                  </v-btn>-->
-              <!--                </template>-->
-              <!--                <v-card density="compact">-->
-              <!--                  <v-card-text>-->
-              <!--                    <v-container>-->
-              <!--                      <v-select-->
-              <!--                          density="compact"-->
-              <!--                          v-model="baseLayer"-->
-              <!--                          :items="items"-->
-              <!--                          item-title="name"-->
-              <!--                          item-value="value"-->
-              <!--                          label="Select"-->
-              <!--                          variant="solo"-->
-              <!--                      />-->
-              <!--                      <v-checkbox density="compact" v-model="bMosaic" label="DCDB Multibeam Bathymetry Mosaic" />-->
-              <!--                      <v-checkbox density="compact" v-model="contours" label="GEBCO Contours" />-->
-              <!--                      <v-checkbox density="compact" v-model="countries" label="World Boundaries and Places" />-->
-              <!--                      <v-checkbox density="compact" v-model="graticule" label="Graticule" />-->
-              <!--                      <v-switch density="compact" :label="`Coordinate Units: ${decimalCoordinates ? 'Decimal degrees' : 'Degrees, Minutes'}`" v-model="decimalCoordinates" />-->
-              <!--                    </v-container>-->
-              <!--                  </v-card-text>-->
-              <!--                  <v-card-actions>-->
-              <!--                    <v-spacer />-->
-              <!--                    <v-btn @click="dialog = false" prepend-icon="mdi-close-circle" color="secondary">Close</v-btn>-->
-              <!--                  </v-card-actions>-->
-              <!--                </v-card>-->
-              <!--              </v-menu>-->
             </v-card-actions>
-            <!--            <v-card-actions class="justify-center">-->
-            <!--              <polar-view-menu :fly-to="flyTo" :disabled="twoDimensional" @flyToPole="updateFlyTo" />-->
-            <!--            </v-card-actions>-->
           </v-card>
         </v-col>
       </v-row>
@@ -156,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import * as Cesium from 'cesium';
 import { Router, useRoute, useRouter } from 'vue-router';
 import {
   computed, onMounted, ref, watch,
@@ -166,6 +74,7 @@ import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogram
 import ColorBar from '@/views/view/echofish/cruise/ColorBar.vue';
 import { HTTPStore, openArray } from 'zarr';
 import { ZARR_BASE_URL } from '@/basePath';
+import EchogramCenter from '@/views/view/echofish/cruise/EchogramCenter';
 import { defaultColorPalette } from './WaterColumnColors';
 
 type ViewState = {
@@ -176,8 +85,25 @@ const route = useRoute();
 const shipName = computed(() => route.params.shipName as string);
 const cruiseName = computed(() => route.params.cruiseName as string);
 const sensorName = computed(() => route.params.sensorName as string);
-const storeIndex = computed(() => Number.parseInt(route.params.storeIndex as string, 10));
-const depthIndex = computed(() => Number.parseInt(route.params.depthIndex as string, 10));
+const storeIndexRoute = computed(() => Number.parseInt(route.params.storeIndex as string, 10));
+const depthIndexRoute = computed(() => Number.parseInt(route.params.depthIndex as string, 10));
+const routeFrequency = computed(() => Number.parseInt(route.params.frequency as string, 10));
+
+const storeIndex = ref(storeIndexRoute.value);
+const depthIndex = ref(depthIndexRoute.value);
+const frequency = ref(routeFrequency.value);
+
+watch(storeIndexRoute, (newVal) => {
+  storeIndex.value = newVal;
+});
+
+watch(depthIndexRoute, (newVal) => {
+  depthIndex.value = newVal;
+});
+
+watch(routeFrequency, (newVal) => {
+  frequency.value = newVal;
+});
 
 const drawer = ref(true);
 const frequencies = ref<number[]>([]);
@@ -186,13 +112,7 @@ const router: Router = useRouter();
 const selectedColorPalette = ref(defaultColorPalette);
 const min = ref(-80);
 const max = ref(-30);
-
-const routeFrequency = computed(() => Number.parseInt(route.params.frequency as string, 10));
-const frequency = ref(routeFrequency.value);
-
-watch(routeFrequency, (newVal) => {
-  frequency.value = newVal;
-});
+const flyTo = ref(Cesium.Cartesian3.fromDegrees(0, 0, 200000));
 
 function openCloseInfoDrawer() {
   drawer.value = !drawer.value;
@@ -212,16 +132,13 @@ function updateMin(value: number) {
 
 const trimTrailingSlashes = (path: string) => (path.trim().replace(/\/+$/, ''));
 
-function updateFrequencyPath(path: string, freq: number) {
+function updatePath(path: string, value: number, endOffset: number) {
   const parts = trimTrailingSlashes(path).split('/');
-  parts[parts.length - 1] = `${freq}`;
+  parts[parts.length - 1 - endOffset] = `${value}`;
   return parts.join('/');
 }
 
-function updateFrequency(value: number) {
-  frequency.value = value;
-  // eslint-disable-next-line no-restricted-globals
-  // history.replaceState(obj, obj.Title, obj.Url);
+function updateUrl(value: number, endOffset: number) {
   // eslint-disable-next-line no-restricted-globals
   const state = history.state;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -229,11 +146,36 @@ function updateFrequency(value: number) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const title = document.title;
   // eslint-disable-next-line no-restricted-globals
-  history.replaceState(state, title, updateFrequencyPath(path, value));
+  history.replaceState(state, title, updatePath(path, value, endOffset));
+}
+
+function updateFrequency(value: number) {
+  frequency.value = value;
+  updateUrl(value, 0);
+}
+
+function updateDepth(value: number) {
+  depthIndex.value = value;
+  updateUrl(value, 1);
+}
+
+function updateStoreIndex(value: number) {
+  storeIndex.value = value;
+  updateUrl(value, 2);
 }
 
 function updateSelectedEchogramPoint(newEchogramPoint: SelectedEchogramPoint | undefined) {
   selectedEchogramPoint.value = newEchogramPoint;
+}
+
+function updateLocation(location: EchogramCenter | undefined) {
+  if (location?.depthIndex !== undefined && location.storeIndex !== undefined) {
+    updateDepth(location.depthIndex);
+    updateStoreIndex(location.storeIndex);
+  }
+  if (location?.latitude !== undefined && location?.longitude !== undefined) {
+    flyTo.value = Cesium.Cartesian3.fromDegrees(location.longitude, location.latitude, 200000);
+  }
 }
 
 function goToMap() {
@@ -259,12 +201,21 @@ function load() {
     });
 }
 
-watch(shipName, () => load());
-watch(cruiseName, () => load());
-watch(sensorName, () => load());
-// watch(storeIndex, () => load());
-// watch(depthIndex, () => load());
-// watch(frequency, () => load());
+watch(shipName, (value) => {
+  if (shipName.value !== value) {
+    load();
+  }
+});
+watch(cruiseName, (value) => {
+  if (cruiseName.value !== value) {
+    load();
+  }
+});
+watch(sensorName, (value) => {
+  if (sensorName.value !== value) {
+    load();
+  }
+});
 
 onMounted(() => load());
 
