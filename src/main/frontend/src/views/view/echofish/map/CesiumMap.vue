@@ -18,7 +18,7 @@
             </cs-imagery-layer>
             <cs-mvt-imagery-layer :globeEvents="globeEvents" :show="true" :index="1" :csEvents="csEvents" dataSourceName="mvt">
               <template #default="{ registerImageryProvider }">
-                <cs-mvt-imagery-provider :csEvents="csEvents" dataSourceName="mvt" :entityFactory="entityFactory" :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" :url="mvtUrl" :maximumLevel="7" />
+                <cs-mvt-imagery-provider :csEvents="csEvents" dataSourceName="mvt" :entityFactory="entityFactory" :registerImageryProvider="registerImageryProvider" :tilingScheme="tilingScheme" :url="mvtUrl" :custom-tags="customTags" :maximumLevel="7" />
               </template>
             </cs-mvt-imagery-layer>
           </template>
@@ -57,7 +57,10 @@ import { Router, useRouter } from 'vue-router';
 
 const router: Router = useRouter();
 
-const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/global/{z}/{x}/{y}.pbf`;
+const customTags = {
+  t: () => `${Date.now()}`,
+};
+const mvtUrl = `${ZARR_BASE_URL}/spatial/mvt/global/{z}/{x}/{y}.pbf?t={t}`;
 const entityFactory = new MvtEntityFactory();
 const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());

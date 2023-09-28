@@ -4,7 +4,7 @@
       <v-container>
         <v-row align="center" no-gutters>
           <v-col class="text-left">
-            <h3>{{ shipName }} {{ cruiseName }} {{ sensorName }}</h3>
+            <h3>{{ shipName }} {{ cruiseName }} {{ sensorName }} {{`${(frequency / 1000).toFixed(2)} kHz`}}</h3>
           </v-col>
           <v-col class="text-right" cols="3">
             <v-btn
@@ -18,33 +18,69 @@
     </template>
     <v-card variant="flat">
       <v-card-text>
-        <v-row no-gutters>
+        <v-row>
           <div class="echogram-globe">
             <cesium-map />
           </div>
         </v-row>
-        <v-row no-gutters>
+        <v-row>
           <multi-frequency-plot :frequencies="frequencies" :selected-data-slice="selectedDataSlice" />
         </v-row>
-        <v-row no-gutters v-if="utcTime">
+        <v-row v-if="utcTime">
           <v-col cols="4">Time (GMT):</v-col>
           <v-col>{{utcTime}}</v-col>
         </v-row>
-        <v-row no-gutters v-if="localTime">
+        <v-row v-if="localTime">
           <v-col cols="4">Time At Location:</v-col>
           <v-col>{{localTime}}</v-col>
         </v-row>
-        <v-row no-gutters v-if="selectedEchogramPoint?.longitude != undefined && selectedEchogramPoint?.latitude != undefined">
+        <v-row v-if="selectedEchogramPoint?.longitude != undefined && selectedEchogramPoint?.latitude != undefined">
           <v-col cols="4">Location:</v-col>
           <v-col>{{`${selectedEchogramPoint.longitude.toFixed(3)} E/W, ${selectedEchogramPoint.latitude.toFixed(3)} N/S`}}</v-col>
         </v-row>
-        <v-row no-gutters v-if="selectedEchogramPoint?.depthMeters != undefined">
+        <v-row v-if="selectedEchogramPoint?.depthMeters != undefined">
           <v-col cols="4">Depth (m):</v-col>
           <v-col>{{-selectedEchogramPoint.depthMeters}}</v-col>
         </v-row>
-        <v-row no-gutters v-if="selectedEchogramPoint?.sv != undefined">
+        <v-row v-if="selectedEchogramPoint?.sv != undefined">
           <v-col cols="4">Selected (Sv):</v-col>
           <v-col>{{selectedEchogramPoint.sv}} dB</v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-form>
+              <v-row no-gutters>
+                <v-col cols="6">
+                  <v-select
+                    :items="frequencyItems"
+                    :model-value="props.frequency"
+                    @update:modelValue="updateFrequency"
+                    density="compact"
+                    label="Frequency"
+                    item-title="name"
+                    item-value="frequency"
+                  />
+                </v-col>
+                <v-col cols="6">
+                  <v-select
+                    :items="colorPaletteItems"
+                    :model-value="props.selectedColorPalette"
+                    @update:modelValue="selectColorPalette"
+                    density="compact"
+                    label="Color Map"
+                  />
+                </v-col>
+              </v-row>
+              <v-row no-gutters>
+                <v-col cols="6">
+                  <v-text-field type="number" v-model="minDeb" label="Min dB" density="compact" />
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field type="number" v-model="maxDeb" label="Max dB" density="compact" />
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-col>
         </v-row>
       </v-card-text>
     </v-card>
@@ -55,9 +91,11 @@
 import CesiumMap from '@/views/view/echofish/map/CesiumMap.vue';
 import MultiFrequencyPlot from '@/views/view/echofish/cruise/MultiFrequencyPlot.vue';
 import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import moment from 'moment-timezone';
 import tzlookup from 'tz-lookup';
+import debounce from 'lodash.debounce';
+import { colorPalettes } from './WaterColumnColors';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = withDefaults(defineProps< {
@@ -66,16 +104,81 @@ const props = withDefaults(defineProps< {
   cruiseName: string,
   sensorName: string,
   frequencies: number[],
+  frequency: number,
+  selectedColorPalette: string,
+  min: number,
+  max: number,
   selectedEchogramPoint?: SelectedEchogramPoint,
 }>(), {
   selectedEchogramPoint: undefined,
 });
 
-const emit = defineEmits(['openCloseDrawer']);
+const colorPaletteItems = Object.keys(colorPalettes);
+
+const emit = defineEmits(['openCloseDrawer', 'selectColorPalette', 'updateMin', 'updateMax', 'updateFrequency']);
 
 const close = () => {
   emit('openCloseDrawer', false);
 };
+
+const updateFrequency = (value:string) => {
+  emit('updateFrequency', value);
+};
+
+const selectColorPalette = (value:string) => {
+  emit('selectColorPalette', value);
+};
+
+const updateMinEvent = (value:number) => {
+  emit('updateMin', value);
+};
+
+const updateMaxEvent = (value:number) => {
+  emit('updateMax', value);
+};
+
+type FreqItem = {
+  frequency: number;
+  name: string;
+};
+
+const min = computed(() => props.min);
+const max = computed(() => props.max);
+
+const minDeb = ref(`${min.value}`);
+const maxDeb = ref(`${max.value}`);
+
+const frequencies = computed(() => props.frequencies);
+
+const frequency = computed(() => props.frequency);
+
+const frequencyItems = computed(() => {
+  const items: Array<FreqItem> = [];
+  frequencies.value.forEach((freq) => items.push({ frequency: freq, name: `${(freq / 1000).toFixed(2)} kHz` }));
+  return items;
+});
+
+const updateMin = debounce(() => {
+  const nextMin = Number.parseFloat(minDeb.value);
+  if (nextMin <= max.value) {
+    updateMinEvent(nextMin);
+  }
+}, 500);
+
+const updateMax = debounce(() => {
+  const nextMax = Number.parseFloat(maxDeb.value);
+  if (nextMax >= min.value) {
+    updateMaxEvent(nextMax);
+  }
+}, 500);
+
+watch(minDeb, () => {
+  updateMin();
+});
+
+watch(maxDeb, () => {
+  updateMax();
+});
 
 const selectedDataSlice = computed(() => (props.selectedEchogramPoint ? props.selectedEchogramPoint.dataSlice : []));
 

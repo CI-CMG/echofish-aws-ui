@@ -107,3 +107,14 @@
   width: 100%;
   background-color: white;
 }
+
+.color-bar {
+  svg {
+    margin: 4px;
+    background-color: #0490E4;
+    text {
+      fill: white;
+    }
+  }
+
+}

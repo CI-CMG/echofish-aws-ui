@@ -19,7 +19,7 @@ import { ZARR_BASE_URL } from '@/basePath';
 import { color } from 'd3-color';
 import { scaleLinear, scaleThreshold } from 'd3-scale';
 import * as d3 from 'd3';
-import { colorPalettes, defaultColorPalette } from '@/views/view/echofish/cruise/WaterColumnColors';
+import { colorPalettes } from '@/views/view/echofish/cruise/WaterColumnColors';
 import { RawArray } from 'zarr/types/rawArray';
 import lIcon from 'leaflet/dist/images/marker-icon.png';
 import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
@@ -31,6 +31,10 @@ const props = defineProps<{
   storeIndex: number;
   depthIndex: number;
   frequency: number;
+  frequencies: number[];
+  min: number;
+  max: number;
+  selectedColorPalette: string;
 }>();
 
 // const router = useRouter();
@@ -39,30 +43,33 @@ const center = ref<LatLngTuple | undefined>();
 // const maxBounds = ref([[0, 0], [0, 0]]);
 const svMarker = ref<L.LatLng | undefined>();
 const map = ref(null);
+
 const shipName = computed(() => props.shipName);
 const cruiseName = computed(() => props.cruiseName);
 const sensorName = computed(() => props.sensorName);
 const storeIndex = computed(() => props.storeIndex);
 const depthIndex = computed(() => props.depthIndex);
 const frequency = computed(() => props.frequency);
-const sliderValues = ref([-80, -30]);
-const selectedColorPalette = ref(defaultColorPalette);
+const frequencies = computed(() => props.frequencies);
+const min = computed(() => props.min);
+const max = computed(() => props.max);
+
+const selectedColorPalette = computed(() => props.selectedColorPalette);
+const palette = computed(() => colorPalettes[selectedColorPalette.value]);
 
 const depthArray = ref<ZarrArray | undefined>();
 const timeArray = ref<ZarrArray | undefined>();
 const latitudeArray = ref<ZarrArray | undefined>();
 const longitudeArray = ref<ZarrArray | undefined>();
-const frequencyArray = ref<ZarrArray | undefined>();
 const svArray = ref<ZarrArray | undefined>();
 
-const frequencies = ref<number[]>([]);
 const selectedPoint = ref<SelectedEchogramPoint | undefined>();
 
 const visibleCanvases = reactive(new Map<string, HTMLCanvasElement>());
 const lMap = ref<L.Map | undefined>();
 const marker = ref<L.Marker | undefined>();
 
-const emit = defineEmits(['updateFrequencies', 'updateSelectedPoint']);
+const emit = defineEmits(['updateSelectedPoint']);
 
 watch(svMarker, (newValue, oldValue) => {
   if (newValue && lMap.value) {
@@ -75,10 +82,6 @@ watch(svMarker, (newValue, oldValue) => {
   }
 });
 
-watch(frequencies, (newValue) => {
-  emit('updateFrequencies', newValue);
-});
-
 watch(selectedPoint, (newValue) => {
   emit('updateSelectedPoint', newValue);
 });
@@ -88,7 +91,7 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
   const x = Number.parseInt(parts[0], 10);
   const y = Number.parseInt(parts[1], 10);
   const z = Number.parseInt(parts[2], 10);
-  if (svArray.value && frequencies.value.length) {
+  if (svArray.value) {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       const dataDimension = svArray.value.meta.shape;
@@ -105,13 +108,10 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
       const indicesTop = 512 * y;
       const indicesBottom = Math.min(512 * y + 512, maxBoundsY);
 
-      const min = sliderValues.value[0];
-      const max = sliderValues.value[1];
-      const palette = (colorPalettes as any)[selectedColorPalette.value] as string[];
-      const greyMapFunc = scaleLinear().domain([min, max]).range([0, 255]).clamp(true);
+      const greyMapFunc = scaleLinear().domain([min.value, max.value]).range([0, 255]).clamp(true);
       const colorfunc = scaleThreshold()
-        .domain(d3.range(0, 255, 255 / palette.length))
-        .range(palette);
+        .domain(d3.range(0, 255, 255 / palette.value.length))
+        .range(palette.value);
 
       if (y >= maxTileBoundsY || y < 0 || x < 0 || x >= maxTileBoundsX) {
         ctx.font = '14px serif';
@@ -130,7 +130,7 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
           const uintc8 = new Uint8ClampedArray(d.data.length * 4).fill(255);
 
           for (let i = 0; i < d.data.length; i++) {
-            if (!Number.isNaN(d.data[i]) && d.data[i] > min && d.data[i] < max) {
+            if (!Number.isNaN(d.data[i]) && d.data[i] > min.value && d.data[i] < max.value) {
             // if (!Number.isNaN(parseFloat(d.data[i])) && d.data[i] > min && d.data[i] < max) {
               const pixelColor = color(colorfunc(greyMapFunc(d.data[i])).substring(0, 7));
               uintc8[i * 4] = pixelColor.r;
@@ -188,6 +188,41 @@ function cursorUpdated(e: LeafletMouseEvent) {
   // this.toggleSidebar();
 }
 
+function drawTiles() {
+  visibleCanvases.forEach((canvas, key) => {
+    drawTile(key, canvas);
+  });
+}
+
+function load() {
+  // center.value = [-1 * depthIndex.value, storeIndex.value];
+
+  const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName.value}/${cruiseName.value}/${sensorName.value}/${cruiseName.value}.zarr`);
+  const depthPromise = openArray({ store, path: 'depth', mode: 'r' });
+  const timePromise = openArray({ store, path: 'time', mode: 'r' });
+  const latitudePromise = openArray({ store, path: 'latitude', mode: 'r' });
+  const longitudePromise = openArray({ store, path: 'longitude', mode: 'r' });
+  const svPromise = openArray({ store, path: 'Sv', mode: 'r' });
+
+  Promise.all([
+    depthPromise,
+    timePromise,
+    latitudePromise,
+    longitudePromise,
+    svPromise,
+  ]).then(([depthArray1, timeArray1, latitudeArray1, longitudeArray1, svArray1]) => {
+    depthArray.value = depthArray1;
+    timeArray.value = timeArray1;
+    latitudeArray.value = latitudeArray1;
+    longitudeArray.value = longitudeArray1;
+    svArray.value = svArray1;
+  }).then(() => {
+    drawTiles();
+    const latlon = new LatLng(0, storeIndex.value);
+    svMarker.value = latlon;
+  });
+}
+
 onMounted(() => {
   center.value = [-1 * depthIndex.value, storeIndex.value];
   if (map.value) {
@@ -227,40 +262,24 @@ onMounted(() => {
     });
 
     lMap.value.addLayer(layer);
+    load();
   }
+});
 
-  const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName.value}/${cruiseName.value}/${sensorName.value}/${cruiseName.value}.zarr`);
-  const depthPromise = openArray({ store, path: 'depth', mode: 'r' });
-  const timePromise = openArray({ store, path: 'time', mode: 'r' });
-  const latitudePromise = openArray({ store, path: 'latitude', mode: 'r' });
-  const longitudePromise = openArray({ store, path: 'longitude', mode: 'r' });
-  const frequencyPromise = openArray({ store, path: 'frequency', mode: 'r' });
-  const svPromise = openArray({ store, path: 'Sv', mode: 'r' });
+watch(frequency, () => {
+  load();
+});
 
-  Promise.all([
-    depthPromise,
-    timePromise,
-    latitudePromise,
-    longitudePromise,
-    frequencyPromise,
-    svPromise,
-  ]).then(([depthArray1, timeArray1, latitudeArray1, longitudeArray1, frequencyArray1, svArray1]) => {
-    depthArray.value = depthArray1;
-    timeArray.value = timeArray1;
-    latitudeArray.value = latitudeArray1;
-    longitudeArray.value = longitudeArray1;
-    frequencyArray.value = frequencyArray1;
-    svArray.value = svArray1;
-    return frequencyArray1.get();
-  }).then((nestedArray: any) => Array.from(nestedArray.data))
-    .then((freq) => {
-      frequencies.value = freq as number[];
-      visibleCanvases.forEach((canvas, key) => {
-        drawTile(key, canvas);
-      });
-      const latlon = new LatLng(0, storeIndex.value);
-      svMarker.value = latlon;
-    });
+watch(palette, () => {
+  drawTiles();
+});
+
+watch(min, () => {
+  drawTiles();
+});
+
+watch(max, () => {
+  drawTiles();
 });
 
 // function onMoveEchogram(nextStoreIndex: number, nextDepthIndex: number) {
