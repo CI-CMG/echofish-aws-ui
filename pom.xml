@@ -9,7 +9,7 @@
   <version>1.0.0-SNAPSHOT</version>
 
   <name>${project.groupId}:${project.artifactId}</name>
-  <description>EchoFish AWS Lambda that generates Mapbox Vector Tiles</description>
+  <description>EchoFish UI</description>
   <url>https://github.com/CI-CMG/echofish-aws-ui</url>
 
   <licenses>
@@ -43,6 +43,8 @@
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <sign.serverId>gpg-sign</sign.serverId>
     <node.version>v16.17.1</node.version>
     <npm.version>8.15.0</npm.version>
   </properties>
@@ -264,7 +266,6 @@
           <releaseProfiles>release,site-publish</releaseProfiles>
           <goals>deploy site</goals>
           <tagNameFormat>v@{project.version}</tagNameFormat>
-          <arguments>-Pdep-check</arguments>
         </configuration>
       </plugin>
 
@@ -401,17 +402,57 @@
                 <phase>pre-site</phase>
               </execution>
             </executions>
+            <configuration>
+              <injectAllReactorProjects>true</injectAllReactorProjects>
+              <failOnNoGitDirectory>false</failOnNoGitDirectory>
+              <offline>true</offline>
+              <replacementProperties>
+                <replacementProperty>
+                  <property>git.remote.origin.url</property>
+                  <propertyOutputSuffix>suffix</propertyOutputSuffix>
+                  <token>^.+/(.+).git$</token>
+                  <value>$1</value>
+                  <regex>true</regex>
+                </replacementProperty>
+              </replacementProperties>
+            </configuration>
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
+            <artifactId>maven-javadoc-plugin</artifactId>
             <executions>
               <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.simplify4u.plugins</groupId>
+            <artifactId>sign-maven-plugin</artifactId>
+            <version>1.0.0</version>
+            <executions>
+              <execution>
                 <goals>
                   <goal>sign</goal>
                 </goals>
+                <configuration>
+                  <skipNoKey>false</skipNoKey>
+                </configuration>
               </execution>
             </executions>
           </plugin>
@@ -454,6 +495,7 @@
             </executions>
           </plugin>
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>
@@ -476,8 +518,7 @@
                       <arg value="javadoc"/>
                       <arg value="git@github.com:CI-CMG/project-documentation.git"/>
                     </exec>
-                    <exec dir="${project.build.directory}/project-documentation" executable="git"
-                      failonerror="false">
+                    <exec dir="${project.build.directory}/project-documentation" executable="git" failonerror="false">
                       <arg value="rm"/>
                       <arg value="-r"/>
                       <arg value="${git.remote.origin.url.suffix}/${project.version}"/>
