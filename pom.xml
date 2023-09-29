@@ -46,6 +46,8 @@
     <sign.serverId>gpg-sign</sign.serverId>
     <node.version>v16.17.1</node.version>
     <npm.version>8.15.0</npm.version>
+    <javadoc.version>3.3.1</javadoc.version>
+    <jacoco.version>0.8.7</jacoco.version>
   </properties>
 
   <repositories>
