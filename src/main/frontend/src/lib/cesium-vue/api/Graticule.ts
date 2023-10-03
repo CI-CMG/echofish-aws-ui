@@ -93,15 +93,6 @@ export class Graticule extends TileCoordinatesImageryProvider {
     }
     super(config);
 
-    this.defaultAlpha = config.defaultAlpha;
-    this.defaultBrightness = config.defaultBrightness;
-    this.defaultContrast = config.defaultContrast;
-    this.defaultHue = config.defaultHue;
-    this.defaultSaturation = config.defaultSaturation;
-    this.defaultGamma = config.defaultGamma;
-    this.defaultMinificationFilter = config.defaultMinificationFilter;
-    this.defaultMagnificationFilter = config.defaultMagnificationFilter;
-
     this._zoom = 0;
     this.color = config.color;
     this._scene = scene;
