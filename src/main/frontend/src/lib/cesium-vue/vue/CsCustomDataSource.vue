@@ -4,10 +4,7 @@
 
 <script setup lang="ts">
 import * as Cesium from 'cesium';
-import {
-  computed,
-  onMounted, ref, watch,
-} from 'vue';
+import { watch } from 'vue';
 import WidgetEventContext from '../api/WidgetEventContext';
 
 // TODO events
@@ -20,71 +17,76 @@ const props = withDefaults(defineProps< {
   entities: Cesium.Entity[]
 }>(), {
   clustering: undefined,
-  show: undefined,
+  show: true,
 });
 
-const dataSource = ref<Cesium.CustomDataSource | undefined>();
-const needNewDataSource = ref(false);
-const entities = computed(() => props.entities);
+function createDataSource(name, show, entities, index) {
+  const ds = new Cesium.CustomDataSource(name);
+  ds.show = show;
+  entities.forEach((entity) => {
+    const copy = new Cesium.Entity();
+    copy.merge(entity);
+    ds.entities.add(entity);
+  });
+  props.csEvents.updateDataSource(ds, index);
+  return ds;
+}
 
-const updateDataSource = () => {
-  dataSource.value = new Cesium.CustomDataSource(props.name);
-  props.csEvents.updateDataSource(dataSource.value, props.index);
-  entities.value.forEach((entity: Cesium.Entity) => dataSource.value?.entities.add(entity));
-  needNewDataSource.value = false;
-};
+const dataSource = createDataSource(props.name, props.show, props.entities, props.index);
+// const needNewDataSource = ref(false);
 
-watch(needNewDataSource, (newValue) => {
-  if (!needNewDataSource.value && newValue) {
-    updateDataSource();
-  }
-});
+// const updateDataSource = () => {
+//   dataSource.name = props.name;
+//   props.csEvents.updateDataSource(dataSource, props.index);
+//   needNewDataSource.value = false;
+// };
 
-watch(entities, (newValue) => {
-  dataSource.value?.entities.removeAll();
-  newValue.forEach((entity) => dataSource.value?.entities.add(entity));
-});
+// watch(needNewDataSource, (newValue) => {
+//   if (!needNewDataSource.value && newValue) {
+//     updateDataSource();
+//   }
+// });
 
 // TODO this is not right.  Need to fix.
-watch(() => props.index, () => {
-  needNewDataSource.value = true;
-});
+// watch(() => props.index, () => {
+//   needNewDataSource.value = true;
+// });
 
 watch(
   () => props.name,
   (newValue) => {
-    if (newValue === undefined) {
-      needNewDataSource.value = true;
-    } else if (dataSource.value) {
-      dataSource.value.name = newValue;
-    }
+    dataSource.name = newValue;
   },
 );
 
 watch(
   () => props.clustering,
   (newValue) => {
-    if (newValue === undefined) {
-      needNewDataSource.value = true;
-    } else if (dataSource.value) {
-      dataSource.value.clustering = newValue;
-    }
+    dataSource.clustering = newValue;
   },
 );
 watch(
   () => props.show,
   (newValue) => {
-    if (newValue === undefined) {
-      needNewDataSource.value = true;
-    } else if (dataSource.value) {
-      dataSource.value.show = newValue;
-    }
+    dataSource.show = newValue;
   },
 );
 
-onMounted(() => {
-  updateDataSource();
-});
+watch(
+  () => props.entities,
+  (nextEntities) => {
+    dataSource.entities.removeAll();
+    nextEntities.forEach((entity) => {
+      const copy = new Cesium.Entity();
+      copy.merge(entity);
+      dataSource.entities.add(entity);
+    });
+  },
+);
+//
+// onMounted(() => {
+//   updateDataSource();
+// });
 
 const render = () => {};
 </script>

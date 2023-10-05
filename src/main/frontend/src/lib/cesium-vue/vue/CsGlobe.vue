@@ -104,74 +104,74 @@ const props = withDefaults(defineProps<{
   vertexShadowDarkness: undefined,
 });
 
-const globe = ref<Cesium.Globe | undefined>();
-const layers = ref<IndexedImageryLayer[]>([]);
+let globe : Cesium.Globe | undefined;
+let layers: IndexedImageryLayer[] = [];
 const needNewGlobe = ref(false);
 
 const initializeLayers = () => {
-  if (globe.value) {
-    globe.value.imageryLayers.removeAll(false);
-    layers.value.forEach((layer) => {
-      globe.value?.imageryLayers.add(layer.imageryLayer);
+  if (globe) {
+    globe.imageryLayers.removeAll(false);
+    layers.forEach((layer) => {
+      globe.imageryLayers.add(layer.imageryLayer);
     });
   }
 };
 
 const initializeGlobe = () => {
   needNewGlobe.value = false;
-  globe.value = new Cesium.Globe(props.ellipsoid || Cesium.Ellipsoid.WGS84);
-  if (props.atmosphereBrightnessShift !== undefined) globe.value.atmosphereBrightnessShift = props.atmosphereBrightnessShift;
-  if (props.atmosphereHueShift !== undefined) globe.value.atmosphereHueShift = props.atmosphereHueShift;
-  if (props.atmosphereLightIntensity !== undefined) globe.value.atmosphereLightIntensity = props.atmosphereLightIntensity;
-  if (props.atmosphereMieAnisotropy !== undefined) globe.value.atmosphereMieAnisotropy = props.atmosphereMieAnisotropy;
-  if (props.atmosphereMieCoefficient !== undefined) globe.value.atmosphereMieCoefficient = props.atmosphereMieCoefficient;
-  if (props.atmosphereMieScaleHeight !== undefined) globe.value.atmosphereMieScaleHeight = props.atmosphereMieScaleHeight;
-  if (props.atmosphereRayleighCoefficient !== undefined) globe.value.atmosphereRayleighCoefficient = props.atmosphereRayleighCoefficient;
-  if (props.atmosphereRayleighScaleHeight !== undefined) globe.value.atmosphereRayleighScaleHeight = props.atmosphereRayleighScaleHeight;
-  if (props.atmosphereSaturationShift !== undefined) globe.value.atmosphereSaturationShift = props.atmosphereSaturationShift;
-  if (props.backFaceCulling !== undefined) globe.value.backFaceCulling = props.backFaceCulling;
-  if (props.baseColor !== undefined) globe.value.baseColor = props.baseColor;
-  if (props.cartographicLimitRectangle !== undefined) globe.value.cartographicLimitRectangle = props.cartographicLimitRectangle;
-  if (props.clippingPlanes !== undefined) globe.value.clippingPlanes = props.clippingPlanes;
-  if (props.depthTestAgainstTerrain !== undefined) globe.value.depthTestAgainstTerrain = props.depthTestAgainstTerrain;
-  if (props.dynamicAtmosphereLighting !== undefined) globe.value.dynamicAtmosphereLighting = props.dynamicAtmosphereLighting;
-  if (props.dynamicAtmosphereLightingFromSun !== undefined) globe.value.dynamicAtmosphereLightingFromSun = props.dynamicAtmosphereLightingFromSun;
-  if (props.enableLighting !== undefined) globe.value.enableLighting = props.enableLighting;
-  if (props.fillHighlightColor !== undefined) globe.value.fillHighlightColor = props.fillHighlightColor;
-  if (props.lambertDiffuseMultiplier !== undefined) globe.value.lambertDiffuseMultiplier = props.lambertDiffuseMultiplier;
-  if (props.lightingFadeInDistance !== undefined) globe.value.lightingFadeInDistance = props.lightingFadeInDistance;
-  if (props.lightingFadeOutDistance !== undefined) globe.value.lightingFadeOutDistance = props.lightingFadeOutDistance;
-  if (props.loadingDescendantLimit !== undefined) globe.value.loadingDescendantLimit = props.loadingDescendantLimit;
-  if (props.material !== undefined) globe.value.material = props.material;
-  if (props.maximumScreenSpaceError !== undefined) globe.value.maximumScreenSpaceError = props.maximumScreenSpaceError;
-  if (props.nightFadeInDistance !== undefined) globe.value.nightFadeInDistance = props.nightFadeInDistance;
-  if (props.nightFadeOutDistance !== undefined) globe.value.nightFadeOutDistance = props.nightFadeOutDistance;
-  if (props.oceanNormalMapUrl !== undefined) globe.value.oceanNormalMapUrl = props.oceanNormalMapUrl;
-  if (props.preloadAncestors !== undefined) globe.value.preloadAncestors = props.preloadAncestors;
-  if (props.preloadSiblings !== undefined) globe.value.preloadSiblings = props.preloadSiblings;
-  if (props.shadows !== undefined) globe.value.shadows = props.shadows;
-  if (props.show !== undefined) globe.value.show = props.show;
-  if (props.showGroundAtmosphere !== undefined) globe.value.showGroundAtmosphere = props.showGroundAtmosphere;
-  if (props.showSkirts !== undefined) globe.value.showSkirts = props.showSkirts;
-  if (props.showWaterEffect !== undefined) globe.value.showWaterEffect = props.showWaterEffect;
-  if (props.terrainExaggeration !== undefined) globe.value.terrainExaggeration = props.terrainExaggeration;
-  if (props.terrainExaggerationRelativeHeight !== undefined) globe.value.terrainExaggerationRelativeHeight = props.terrainExaggerationRelativeHeight;
-  if (props.terrainProvider !== undefined) globe.value.terrainProvider = props.terrainProvider;
-  if (props.tileCacheSize !== undefined) globe.value.tileCacheSize = props.tileCacheSize;
-  if (props.translucency !== undefined) globe.value.translucency = props.translucency;
-  if (props.undergroundColor !== undefined) globe.value.undergroundColor = props.undergroundColor;
-  if (props.undergroundColorAlphaByDistance !== undefined) globe.value.undergroundColorAlphaByDistance = props.undergroundColorAlphaByDistance;
-  if (props.vertexShadowDarkness !== undefined) globe.value.vertexShadowDarkness = props.vertexShadowDarkness;
+  globe = new Cesium.Globe(props.ellipsoid || Cesium.Ellipsoid.WGS84);
+  if (props.atmosphereBrightnessShift !== undefined) globe.atmosphereBrightnessShift = props.atmosphereBrightnessShift;
+  if (props.atmosphereHueShift !== undefined) globe.atmosphereHueShift = props.atmosphereHueShift;
+  if (props.atmosphereLightIntensity !== undefined) globe.atmosphereLightIntensity = props.atmosphereLightIntensity;
+  if (props.atmosphereMieAnisotropy !== undefined) globe.atmosphereMieAnisotropy = props.atmosphereMieAnisotropy;
+  if (props.atmosphereMieCoefficient !== undefined) globe.atmosphereMieCoefficient = props.atmosphereMieCoefficient;
+  if (props.atmosphereMieScaleHeight !== undefined) globe.atmosphereMieScaleHeight = props.atmosphereMieScaleHeight;
+  if (props.atmosphereRayleighCoefficient !== undefined) globe.atmosphereRayleighCoefficient = props.atmosphereRayleighCoefficient;
+  if (props.atmosphereRayleighScaleHeight !== undefined) globe.atmosphereRayleighScaleHeight = props.atmosphereRayleighScaleHeight;
+  if (props.atmosphereSaturationShift !== undefined) globe.atmosphereSaturationShift = props.atmosphereSaturationShift;
+  if (props.backFaceCulling !== undefined) globe.backFaceCulling = props.backFaceCulling;
+  if (props.baseColor !== undefined) globe.baseColor = props.baseColor;
+  if (props.cartographicLimitRectangle !== undefined) globe.cartographicLimitRectangle = props.cartographicLimitRectangle;
+  if (props.clippingPlanes !== undefined) globe.clippingPlanes = props.clippingPlanes;
+  if (props.depthTestAgainstTerrain !== undefined) globe.depthTestAgainstTerrain = props.depthTestAgainstTerrain;
+  if (props.dynamicAtmosphereLighting !== undefined) globe.dynamicAtmosphereLighting = props.dynamicAtmosphereLighting;
+  if (props.dynamicAtmosphereLightingFromSun !== undefined) globe.dynamicAtmosphereLightingFromSun = props.dynamicAtmosphereLightingFromSun;
+  if (props.enableLighting !== undefined) globe.enableLighting = props.enableLighting;
+  if (props.fillHighlightColor !== undefined) globe.fillHighlightColor = props.fillHighlightColor;
+  if (props.lambertDiffuseMultiplier !== undefined) globe.lambertDiffuseMultiplier = props.lambertDiffuseMultiplier;
+  if (props.lightingFadeInDistance !== undefined) globe.lightingFadeInDistance = props.lightingFadeInDistance;
+  if (props.lightingFadeOutDistance !== undefined) globe.lightingFadeOutDistance = props.lightingFadeOutDistance;
+  if (props.loadingDescendantLimit !== undefined) globe.loadingDescendantLimit = props.loadingDescendantLimit;
+  if (props.material !== undefined) globe.material = props.material;
+  if (props.maximumScreenSpaceError !== undefined) globe.maximumScreenSpaceError = props.maximumScreenSpaceError;
+  if (props.nightFadeInDistance !== undefined) globe.nightFadeInDistance = props.nightFadeInDistance;
+  if (props.nightFadeOutDistance !== undefined) globe.nightFadeOutDistance = props.nightFadeOutDistance;
+  if (props.oceanNormalMapUrl !== undefined) globe.oceanNormalMapUrl = props.oceanNormalMapUrl;
+  if (props.preloadAncestors !== undefined) globe.preloadAncestors = props.preloadAncestors;
+  if (props.preloadSiblings !== undefined) globe.preloadSiblings = props.preloadSiblings;
+  if (props.shadows !== undefined) globe.shadows = props.shadows;
+  if (props.show !== undefined) globe.show = props.show;
+  if (props.showGroundAtmosphere !== undefined) globe.showGroundAtmosphere = props.showGroundAtmosphere;
+  if (props.showSkirts !== undefined) globe.showSkirts = props.showSkirts;
+  if (props.showWaterEffect !== undefined) globe.showWaterEffect = props.showWaterEffect;
+  if (props.terrainExaggeration !== undefined) globe.terrainExaggeration = props.terrainExaggeration;
+  if (props.terrainExaggerationRelativeHeight !== undefined) globe.terrainExaggerationRelativeHeight = props.terrainExaggerationRelativeHeight;
+  if (props.terrainProvider !== undefined) globe.terrainProvider = props.terrainProvider;
+  if (props.tileCacheSize !== undefined) globe.tileCacheSize = props.tileCacheSize;
+  if (props.translucency !== undefined) globe.translucency = props.translucency;
+  if (props.undergroundColor !== undefined) globe.undergroundColor = props.undergroundColor;
+  if (props.undergroundColorAlphaByDistance !== undefined) globe.undergroundColorAlphaByDistance = props.undergroundColorAlphaByDistance;
+  if (props.vertexShadowDarkness !== undefined) globe.vertexShadowDarkness = props.vertexShadowDarkness;
 
   initializeLayers();
-  props.csEvents.updateGlobe(globe.value);
+  props.csEvents.updateGlobe(globe);
 };
 
 const globeEvents: GlobeEventContext = {
   registerImageryLayer(imageryLayer, index) {
     const tempLayers: IndexedImageryLayer[] = [];
     let added = false;
-    layers.value.forEach((layer) => {
+    layers.forEach((layer) => {
       if (layer.index < index) {
         tempLayers.push(layer);
       } else if (layer.index === index) {
@@ -189,7 +189,8 @@ const globeEvents: GlobeEventContext = {
     if (!added) {
       tempLayers.push(new IndexedImageryLayer(index, imageryLayer));
     }
-    layers.value = tempLayers;
+    layers = tempLayers;
+    initializeLayers();
   },
 };
 
@@ -197,9 +198,9 @@ onMounted(() => {
   initializeGlobe();
 });
 
-watch(layers, () => {
-  initializeLayers();
-});
+// watch(layers, () => {
+//   initializeLayers();
+// });
 
 watch(needNewGlobe, (newValue, oldValue) => {
   if (newValue && !oldValue) {
@@ -214,8 +215,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereBrightnessShift = newValue;
+    } else if (globe) {
+      globe.atmosphereBrightnessShift = newValue;
     }
   },
 );
@@ -225,8 +226,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereHueShift = newValue;
+    } else if (globe) {
+      globe.atmosphereHueShift = newValue;
     }
   },
 );
@@ -235,8 +236,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereLightIntensity = newValue;
+    } else if (globe) {
+      globe.atmosphereLightIntensity = newValue;
     }
   },
 );
@@ -245,8 +246,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereMieAnisotropy = newValue;
+    } else if (globe) {
+      globe.atmosphereMieAnisotropy = newValue;
     }
   },
 );
@@ -255,8 +256,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereMieCoefficient = newValue;
+    } else if (globe) {
+      globe.atmosphereMieCoefficient = newValue;
     }
   },
 );
@@ -265,8 +266,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereMieScaleHeight = newValue;
+    } else if (globe) {
+      globe.atmosphereMieScaleHeight = newValue;
     }
   },
 );
@@ -275,8 +276,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereRayleighCoefficient = newValue;
+    } else if (globe) {
+      globe.atmosphereRayleighCoefficient = newValue;
     }
   },
 );
@@ -285,8 +286,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereRayleighScaleHeight = newValue;
+    } else if (globe) {
+      globe.atmosphereRayleighScaleHeight = newValue;
     }
   },
 );
@@ -295,8 +296,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.atmosphereSaturationShift = newValue;
+    } else if (globe) {
+      globe.atmosphereSaturationShift = newValue;
     }
   },
 );
@@ -305,8 +306,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.backFaceCulling = newValue;
+    } else if (globe) {
+      globe.backFaceCulling = newValue;
     }
   },
 );
@@ -315,8 +316,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.baseColor = newValue;
+    } else if (globe) {
+      globe.baseColor = newValue;
     }
   },
 );
@@ -325,8 +326,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.cartographicLimitRectangle = newValue;
+    } else if (globe) {
+      globe.cartographicLimitRectangle = newValue;
     }
   },
 );
@@ -335,8 +336,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.clippingPlanes = newValue;
+    } else if (globe) {
+      globe.clippingPlanes = newValue;
     }
   },
 );
@@ -345,8 +346,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.depthTestAgainstTerrain = newValue;
+    } else if (globe) {
+      globe.depthTestAgainstTerrain = newValue;
     }
   },
 );
@@ -355,8 +356,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.dynamicAtmosphereLighting = newValue;
+    } else if (globe) {
+      globe.dynamicAtmosphereLighting = newValue;
     }
   },
 );
@@ -365,8 +366,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.dynamicAtmosphereLightingFromSun = newValue;
+    } else if (globe) {
+      globe.dynamicAtmosphereLightingFromSun = newValue;
     }
   },
 );
@@ -375,8 +376,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.enableLighting = newValue;
+    } else if (globe) {
+      globe.enableLighting = newValue;
     }
   },
 );
@@ -385,8 +386,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.fillHighlightColor = newValue;
+    } else if (globe) {
+      globe.fillHighlightColor = newValue;
     }
   },
 );
@@ -395,8 +396,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.lambertDiffuseMultiplier = newValue;
+    } else if (globe) {
+      globe.lambertDiffuseMultiplier = newValue;
     }
   },
 );
@@ -405,8 +406,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.lightingFadeInDistance = newValue;
+    } else if (globe) {
+      globe.lightingFadeInDistance = newValue;
     }
   },
 );
@@ -415,8 +416,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.lightingFadeOutDistance = newValue;
+    } else if (globe) {
+      globe.lightingFadeOutDistance = newValue;
     }
   },
 );
@@ -425,8 +426,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.loadingDescendantLimit = newValue;
+    } else if (globe) {
+      globe.loadingDescendantLimit = newValue;
     }
   },
 );
@@ -435,8 +436,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.material = newValue;
+    } else if (globe) {
+      globe.material = newValue;
     }
   },
 );
@@ -445,8 +446,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.maximumScreenSpaceError = newValue;
+    } else if (globe) {
+      globe.maximumScreenSpaceError = newValue;
     }
   },
 );
@@ -455,8 +456,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.nightFadeInDistance = newValue;
+    } else if (globe) {
+      globe.nightFadeInDistance = newValue;
     }
   },
 );
@@ -465,8 +466,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.nightFadeOutDistance = newValue;
+    } else if (globe) {
+      globe.nightFadeOutDistance = newValue;
     }
   },
 );
@@ -475,8 +476,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.oceanNormalMapUrl = newValue;
+    } else if (globe) {
+      globe.oceanNormalMapUrl = newValue;
     }
   },
 );
@@ -485,8 +486,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.preloadAncestors = newValue;
+    } else if (globe) {
+      globe.preloadAncestors = newValue;
     }
   },
 );
@@ -495,8 +496,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.preloadSiblings = newValue;
+    } else if (globe) {
+      globe.preloadSiblings = newValue;
     }
   },
 );
@@ -505,8 +506,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.shadows = newValue;
+    } else if (globe) {
+      globe.shadows = newValue;
     }
   },
 );
@@ -515,8 +516,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.show = newValue;
+    } else if (globe) {
+      globe.show = newValue;
     }
   },
 );
@@ -525,8 +526,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.showGroundAtmosphere = newValue;
+    } else if (globe) {
+      globe.showGroundAtmosphere = newValue;
     }
   },
 );
@@ -535,8 +536,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.showSkirts = newValue;
+    } else if (globe) {
+      globe.showSkirts = newValue;
     }
   },
 );
@@ -545,8 +546,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.showWaterEffect = newValue;
+    } else if (globe) {
+      globe.showWaterEffect = newValue;
     }
   },
 );
@@ -555,8 +556,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.terrainExaggeration = newValue;
+    } else if (globe) {
+      globe.terrainExaggeration = newValue;
     }
   },
 );
@@ -565,8 +566,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.terrainExaggerationRelativeHeight = newValue;
+    } else if (globe) {
+      globe.terrainExaggerationRelativeHeight = newValue;
     }
   },
 );
@@ -575,8 +576,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.terrainProvider = newValue;
+    } else if (globe) {
+      globe.terrainProvider = newValue;
     }
   },
 );
@@ -585,8 +586,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.tileCacheSize = newValue;
+    } else if (globe) {
+      globe.tileCacheSize = newValue;
     }
   },
 );
@@ -595,8 +596,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.translucency = newValue;
+    } else if (globe) {
+      globe.translucency = newValue;
     }
   },
 );
@@ -605,8 +606,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.undergroundColor = newValue;
+    } else if (globe) {
+      globe.undergroundColor = newValue;
     }
   },
 );
@@ -615,8 +616,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.undergroundColorAlphaByDistance = newValue;
+    } else if (globe) {
+      globe.undergroundColorAlphaByDistance = newValue;
     }
   },
 );
@@ -625,8 +626,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewGlobe.value = true;
-    } else if (globe.value) {
-      globe.value.vertexShadowDarkness = newValue;
+    } else if (globe) {
+      globe.vertexShadowDarkness = newValue;
     }
   },
 );

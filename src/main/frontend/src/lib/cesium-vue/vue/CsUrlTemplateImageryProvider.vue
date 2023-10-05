@@ -49,7 +49,7 @@ const props = withDefaults(defineProps< {
   customTags: undefined,
 });
 
-const imageryProvider = ref<Cesium.ImageryProvider | undefined>();
+let imageryProvider: Cesium.ImageryProvider | undefined;
 const needNewProvider = ref(false);
 const url = computed(() => props.url);
 const options = computed(() => props.options);
@@ -70,8 +70,8 @@ const enablePickFeatures = computed(() => props.enablePickFeatures);
 const customTags = computed(() => props.customTags);
 
 const updateImageryProvider = () => {
-  imageryProvider.value = new Cesium.UrlTemplateImageryProvider(props);
-  props.registerImageryProvider(imageryProvider.value);
+  imageryProvider = new Cesium.UrlTemplateImageryProvider(props);
+  props.registerImageryProvider(imageryProvider);
   needNewProvider.value = false;
 };
 

@@ -69,15 +69,16 @@ const tilingScheme = new Cesium.GeographicTilingScheme();
 const fnc = reactive(new FeatureNameContainerState());
 const mapMouseHandler = new MapMouseHandler(fnc, router);
 
-const props = withDefaults(defineProps< {
-  flyTo?: Cesium.Cartesian3;
-  locationEntities?: Cesium.Entity[];
+const props = withDefaults(defineProps<{
+  flyTo?: Cesium.Cartesian3,
+  locationEntities?: Cesium.Entity[],
 }>(), {
-  flyTo: () => Cesium.Cartesian3.fromDegrees(0, 0, 15000000),
+  flyTo: Cesium.Cartesian3.fromDegrees(0, 0, 15000000),
   locationEntities: () => [],
 });
 
 const flyToCoords = computed(() => props.flyTo);
+const locationEntities = computed(() => props.locationEntities);
 
 const flyTo = computed(() => ({ destination: flyToCoords.value } as FlyToOptions));
 </script>

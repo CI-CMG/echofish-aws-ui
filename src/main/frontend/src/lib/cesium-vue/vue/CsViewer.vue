@@ -197,25 +197,27 @@ const props = withDefaults(defineProps<{
   flyTo: undefined,
 });
 
+let viewer: CustomViewer | undefined;
+let globe: Cesium.Globe | undefined;
+
 const emit = defineEmits(['moveend']);
 
 const cs = ref<HTMLElement | undefined>();
-const viewer = ref<CustomViewer | undefined>();
-const globe = ref<Cesium.Globe | undefined>();
+
 const needNewViewer = ref(false);
-const dataSources = ref<IndexedDataSource[]>([]);
+let dataSources: IndexedDataSource[] = [];
 const position = ref<Cesium.Cartesian3 | undefined>();
-const screenInputs = ref<ScreenInput[]>([]);
+let screenInputs: ScreenInput[] = [];
 const cameraInputs = ref<(() => void)[]>([]);
 
 const flyTo = () => {
-  if (props.flyTo && viewer.value) {
+  if (props.flyTo && viewer) {
     if (props.flyTo.target) {
-      viewer.value.flyTo(props.flyTo.target, props.flyTo);
+      viewer.flyTo(props.flyTo.target, props.flyTo);
     } else if (props.flyTo.destination) {
-      viewer.value.camera.flyTo({ ...props.flyTo, destination: props.flyTo.destination });
+      viewer.camera.flyTo({ ...props.flyTo, destination: props.flyTo.destination });
     } else if (props.flyTo.boundingSphere) {
-      viewer.value.camera.flyToBoundingSphere(props.flyTo.boundingSphere, props.flyTo);
+      viewer.camera.flyToBoundingSphere(props.flyTo.boundingSphere, props.flyTo);
     }
   }
 };
@@ -232,28 +234,28 @@ class WidgetEventContextImpl implements WidgetEventContext {
   }
 
   onNewViewer(callback: (viewer: CustomViewer) => void) {
-    if (viewer.value) {
-      callback(viewer.value);
+    if (viewer) {
+      callback(viewer);
     }
     this.onNewViewerCallbacks.push(callback);
   }
 
   // eslint-disable-next-line class-methods-use-this
   getViewer() {
-    if (viewer.value) {
-      return viewer.value;
+    if (viewer) {
+      return viewer;
     }
     throw new Cesium.RuntimeError('Viewer not initialized');
   }
 
   // eslint-disable-next-line class-methods-use-this
   updateGlobe(newGlobe?: Cesium.Globe) {
-    globe.value = newGlobe;
+    globe = newGlobe;
   }
 
   // eslint-disable-next-line class-methods-use-this
   setInputAction(event: Cesium.ScreenSpaceEventHandler.PositionedEventCallback | Cesium.ScreenSpaceEventHandler.MotionEventCallback | Cesium.ScreenSpaceEventHandler.WheelEventCallback | Cesium.ScreenSpaceEventHandler.TwoPointEventCallback | Cesium.ScreenSpaceEventHandler.TwoPointMotionEventCallback, type: Cesium.ScreenSpaceEventType, modifier?: Cesium.KeyboardEventModifier) {
-    screenInputs.value = [...screenInputs.value, new ScreenInput(event, type, modifier)];
+    screenInputs = [...screenInputs, new ScreenInput(event, type, modifier)];
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -265,7 +267,7 @@ class WidgetEventContextImpl implements WidgetEventContext {
   updateDataSource(updateDataSource: Cesium.DataSource, index: number) {
     const tempDataSources: IndexedDataSource[] = [];
     let added = false;
-    dataSources.value.forEach((dataSource) => {
+    dataSources.forEach((dataSource) => {
       if (dataSource.index < index) {
         tempDataSources.push(dataSource);
       } else if (dataSource.index === index) {
@@ -283,16 +285,16 @@ class WidgetEventContextImpl implements WidgetEventContext {
     if (!added) {
       tempDataSources.push(new IndexedDataSource(index, updateDataSource));
     }
-    dataSources.value = tempDataSources;
+    dataSources = tempDataSources;
   }
 
   // eslint-disable-next-line class-methods-use-this
   changeSceneMode(sceneMode: Cesium.SceneMode) {
-    if (viewer.value) {
+    if (viewer) {
       if (sceneMode === SceneMode.SCENE2D) {
-        viewer.value?.sceneModePicker.viewModel.morphTo2D();
+        viewer.sceneModePicker.viewModel.morphTo2D();
       } else {
-        viewer.value?.sceneModePicker.viewModel.morphTo3D();
+        viewer.sceneModePicker.viewModel.morphTo3D();
       }
     }
   }
@@ -301,16 +303,37 @@ class WidgetEventContextImpl implements WidgetEventContext {
 const csEvents = new WidgetEventContextImpl();
 
 const initializeDataSources = () => {
-  if (viewer.value) {
-    viewer.value.dataSources.removeAll(false);
-    dataSources.value.forEach((dataSource) => {
-      viewer.value?.dataSources.add(dataSource.dataSource);
+  if (viewer) {
+    viewer.dataSources.removeAll(false);
+    dataSources.forEach((dataSource) => {
+      viewer.dataSources.add(dataSource.dataSource);
       csEvents.onUpdateDatasourceCallbacks.forEach((callback) => {
         callback(dataSource.dataSource);
       });
     });
   }
 };
+
+function updateScreenInputs(newValue, oldValue) {
+  if (viewer) {
+    oldValue.forEach((input) => {
+      viewer.screenSpaceEventHandler.removeInputAction(input.type, input.modifier);
+    });
+    newValue.forEach((input) => {
+      const callback = viewer.screenSpaceEventHandler.getInputAction(input.type, input.modifier);
+      if (callback) {
+        const cb: Cesium.ScreenSpaceEventHandler.PositionedEventCallback = (event) => {
+          callback(event as Cesium.ScreenSpaceEventHandler.PositionedEvent & Cesium.ScreenSpaceEventHandler.MotionEvent & number & Cesium.ScreenSpaceEventHandler.TwoPointEvent & Cesium.ScreenSpaceEventHandler.TwoPointMotionEvent);
+          input.event(event as Cesium.ScreenSpaceEventHandler.PositionedEvent & Cesium.ScreenSpaceEventHandler.MotionEvent & number & Cesium.ScreenSpaceEventHandler.TwoPointEvent & Cesium.ScreenSpaceEventHandler.TwoPointMotionEvent);
+        };
+        viewer.screenSpaceEventHandler.removeInputAction(input.type, input.modifier);
+        viewer.screenSpaceEventHandler.setInputAction(cb, input.type, input.modifier);
+      } else {
+        viewer.screenSpaceEventHandler.setInputAction(input.event, input.type, input.modifier);
+      }
+    });
+  }
+}
 
 const initializeViewer = () => {
   needNewViewer.value = false;
@@ -324,7 +347,7 @@ const initializeViewer = () => {
       scene3DOnly: props.scene3DOnly,
       orderIndependentTranslucency: props.orderIndependentTranslucency,
       mapProjection: props.mapProjection,
-      globe: false,
+      globe,
       useDefaultRenderLoop: props.useDefaultRenderLoop,
       useBrowserRecommendedResolution: props.useBrowserRecommendedResolution,
       targetFrameRate: props.targetFrameRate,
@@ -367,10 +390,10 @@ const initializeViewer = () => {
 
     options.sceneModePicker = true;
 
-    viewer.value = new CustomViewer(cs.value, options);
-    const scene = viewer.value?.scene;
+    viewer = new CustomViewer(cs.value, options);
+    const scene = viewer.scene;
     scene.screenSpaceCameraController.maximumZoomDistance = 30000000;
-    const camera = viewer.value?.camera;
+    const camera = viewer.camera;
     camera.percentageChanged = 0.001;
     if (scene) {
       if (props.backgroundColor !== undefined) scene.backgroundColor = props.backgroundColor;
@@ -404,21 +427,22 @@ const initializeViewer = () => {
       if (props.useWebVR !== undefined) scene.useWebVR = props.useWebVR;
     }
     if (position.value) {
-      viewer.value.camera.flyTo({ destination: position.value, duration: 0.0 });
+      viewer.camera.flyTo({ destination: position.value, duration: 0.0 });
     } else {
       flyTo();
     }
-    viewer.value.camera.moveEnd.addEventListener(() => {
-      position.value = viewer.value?.camera.position;
+    viewer.camera.moveEnd.addEventListener(() => {
+      position.value = viewer.camera.position;
       emit('moveend', position.value);
     });
 
     initializeDataSources();
     csEvents.onNewViewerCallbacks.forEach((callback) => {
-      if (viewer.value) {
-        callback(viewer.value);
+      if (viewer) {
+        callback(viewer);
       }
     });
+    updateScreenInputs(screenInputs, []);
   }
 };
 
@@ -428,8 +452,8 @@ onMounted(() => {
 
 watch(() => props.flyTo, () => {
   flyTo();
-  if (viewer.value) {
-    viewer.value.scene.screenSpaceCameraController.polar = !!(props.flyTo && props.flyTo.destinationIsPolar);
+  if (viewer) {
+    viewer.scene.screenSpaceCameraController.polar = !!(props.flyTo && props.flyTo.destinationIsPolar);
   }
 });
 
@@ -454,8 +478,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.requestRenderMode = newValue;
+    } else if (viewer) {
+      viewer.scene.requestRenderMode = newValue;
     }
   },
 );
@@ -465,8 +489,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.maximumRenderTimeChange = newValue;
+    } else if (viewer) {
+      viewer.scene.maximumRenderTimeChange = newValue;
     }
   },
 );
@@ -476,8 +500,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.msaaSamples = newValue;
+    } else if (viewer) {
+      viewer.scene.msaaSamples = newValue;
     }
   },
 );
@@ -487,8 +511,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.backgroundColor = newValue;
+    } else if (viewer) {
+      viewer.scene.backgroundColor = newValue;
     }
   },
 );
@@ -498,8 +522,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.completeMorphOnUserInput = newValue;
+    } else if (viewer) {
+      viewer.scene.completeMorphOnUserInput = newValue;
     }
   },
 );
@@ -509,8 +533,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.eyeSeparation = newValue;
+    } else if (viewer) {
+      viewer.scene.eyeSeparation = newValue;
     }
   },
 );
@@ -520,8 +544,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.farToNearRatio = newValue;
+    } else if (viewer) {
+      viewer.scene.farToNearRatio = newValue;
     }
   },
 );
@@ -531,8 +555,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.focalLength = newValue;
+    } else if (viewer) {
+      viewer.scene.focalLength = newValue;
     }
   },
 );
@@ -542,8 +566,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.fog = newValue;
+    } else if (viewer) {
+      viewer.scene.fog = newValue;
     }
   },
 );
@@ -553,8 +577,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.gamma = newValue;
+    } else if (viewer) {
+      viewer.scene.gamma = newValue;
     }
   },
 );
@@ -564,8 +588,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.highDynamicRange = newValue;
+    } else if (viewer) {
+      viewer.scene.highDynamicRange = newValue;
     }
   },
 );
@@ -575,8 +599,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.invertClassification = newValue;
+    } else if (viewer) {
+      viewer.scene.invertClassification = newValue;
     }
   },
 );
@@ -586,8 +610,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.invertClassificationColor = newValue;
+    } else if (viewer) {
+      viewer.scene.invertClassificationColor = newValue;
     }
   },
 );
@@ -597,8 +621,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.light = newValue;
+    } else if (viewer) {
+      viewer.scene.light = newValue;
     }
   },
 );
@@ -608,8 +632,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.logarithmicDepthBuffer = newValue;
+    } else if (viewer) {
+      viewer.scene.logarithmicDepthBuffer = newValue;
     }
   },
 );
@@ -619,8 +643,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.logarithmicDepthFarToNearRatio = newValue;
+    } else if (viewer) {
+      viewer.scene.logarithmicDepthFarToNearRatio = newValue;
     }
   },
 );
@@ -630,8 +654,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.minimumDisableDepthTestDistance = newValue;
+    } else if (viewer) {
+      viewer.scene.minimumDisableDepthTestDistance = newValue;
     }
   },
 );
@@ -641,8 +665,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.mode = newValue;
+    } else if (viewer) {
+      viewer.scene.mode = newValue;
     }
   },
 );
@@ -652,8 +676,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.moon = newValue;
+    } else if (viewer) {
+      viewer.scene.moon = newValue;
     }
   },
 );
@@ -663,8 +687,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.morphTime = newValue;
+    } else if (viewer) {
+      viewer.scene.morphTime = newValue;
     }
   },
 );
@@ -674,8 +698,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.nearToFarDistance2D = newValue;
+    } else if (viewer) {
+      viewer.scene.nearToFarDistance2D = newValue;
     }
   },
 );
@@ -685,8 +709,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.pickTranslucentDepth = newValue;
+    } else if (viewer) {
+      viewer.scene.pickTranslucentDepth = newValue;
     }
   },
 );
@@ -696,8 +720,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.postProcessStages = newValue;
+    } else if (viewer) {
+      viewer.scene.postProcessStages = newValue;
     }
   },
 );
@@ -707,8 +731,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.rethrowRenderErrors = newValue;
+    } else if (viewer) {
+      viewer.scene.rethrowRenderErrors = newValue;
     }
   },
 );
@@ -718,8 +742,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.shadowMap = newValue;
+    } else if (viewer) {
+      viewer.scene.shadowMap = newValue;
     }
   },
 );
@@ -729,8 +753,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.skyAtmosphere = newValue;
+    } else if (viewer) {
+      viewer.scene.skyAtmosphere = newValue;
     }
   },
 );
@@ -740,8 +764,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.skyBox = newValue;
+    } else if (viewer) {
+      viewer.scene.skyBox = newValue;
     }
   },
 );
@@ -751,8 +775,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.specularEnvironmentMaps = newValue;
+    } else if (viewer) {
+      viewer.scene.specularEnvironmentMaps = newValue;
     }
   },
 );
@@ -762,8 +786,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.sun = newValue;
+    } else if (viewer) {
+      viewer.scene.sun = newValue;
     }
   },
 );
@@ -773,8 +797,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.sunBloom = newValue;
+    } else if (viewer) {
+      viewer.scene.sunBloom = newValue;
     }
   },
 );
@@ -784,8 +808,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.useDepthPicking = newValue;
+    } else if (viewer) {
+      viewer.scene.useDepthPicking = newValue;
     }
   },
 );
@@ -795,8 +819,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.scene.useWebVR = newValue;
+    } else if (viewer) {
+      viewer.scene.useWebVR = newValue;
     }
   },
 );
@@ -809,8 +833,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.targetFrameRate = newValue;
+    } else if (viewer) {
+      viewer.targetFrameRate = newValue;
     }
   },
 );
@@ -820,8 +844,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.useBrowserRecommendedResolution = newValue;
+    } else if (viewer) {
+      viewer.useBrowserRecommendedResolution = newValue;
     }
   },
 );
@@ -831,8 +855,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.useDefaultRenderLoop = newValue;
+    } else if (viewer) {
+      viewer.useDefaultRenderLoop = newValue;
     }
   },
 );
@@ -842,55 +866,34 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewViewer.value = true;
-    } else if (viewer.value) {
-      viewer.value.resolutionScale = newValue;
+    } else if (viewer) {
+      viewer.resolutionScale = newValue;
     }
   },
 );
 
-watch(screenInputs, (newValue, oldValue) => {
-  if (viewer.value) {
-    oldValue.forEach((input) => {
-      viewer.value?.screenSpaceEventHandler.removeInputAction(input.type, input.modifier);
-    });
-    newValue.forEach((input) => {
-      const callback = viewer.value?.screenSpaceEventHandler.getInputAction(input.type, input.modifier);
-      if (callback) {
-        const cb: Cesium.ScreenSpaceEventHandler.PositionedEventCallback = (event) => {
-          callback(event as Cesium.ScreenSpaceEventHandler.PositionedEvent & Cesium.ScreenSpaceEventHandler.MotionEvent & number & Cesium.ScreenSpaceEventHandler.TwoPointEvent & Cesium.ScreenSpaceEventHandler.TwoPointMotionEvent);
-          input.event(event as Cesium.ScreenSpaceEventHandler.PositionedEvent & Cesium.ScreenSpaceEventHandler.MotionEvent & number & Cesium.ScreenSpaceEventHandler.TwoPointEvent & Cesium.ScreenSpaceEventHandler.TwoPointMotionEvent);
-        };
-        viewer.value?.screenSpaceEventHandler.removeInputAction(input.type, input.modifier);
-        viewer.value?.screenSpaceEventHandler.setInputAction(cb, input.type, input.modifier);
-      } else {
-        viewer.value?.screenSpaceEventHandler.setInputAction(input.event, input.type, input.modifier);
-      }
-    });
-  }
-});
-
 watch(cameraInputs, (newValue, oldValue) => {
-  if (viewer.value) {
+  if (viewer) {
     oldValue.forEach((input) => {
-      viewer.value?.camera.changed.removeEventListener(input);
-      viewer.value?.camera.moveEnd.removeEventListener(input);
+      viewer.camera.changed.removeEventListener(input);
+      viewer.camera.moveEnd.removeEventListener(input);
     });
     newValue.forEach((input) => {
-      viewer.value?.camera.changed.addEventListener(input);
-      viewer.value?.camera.moveEnd.addEventListener(input);
+      viewer.camera.changed.addEventListener(input);
+      viewer.camera.moveEnd.addEventListener(input);
     });
   }
 });
 
-watch(dataSources, () => {
-  initializeDataSources();
-});
+// watch(dataSources, () => {
+//   initializeDataSources();
+// });
 
-watch(globe, (newValue) => {
-  if (viewer.value && newValue) {
-    viewer.value.scene.globe = newValue;
-  }
-});
+// watch(globe, (newValue) => {
+//   if (viewer && newValue) {
+//     viewer.scene.globe = newValue;
+//   }
+// });
 
 defineExpose({ cs });
 </script>
