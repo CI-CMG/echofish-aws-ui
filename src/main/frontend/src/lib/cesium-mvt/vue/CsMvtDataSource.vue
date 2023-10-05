@@ -19,12 +19,12 @@ const props = withDefaults(defineProps< {
   show: true,
 });
 
-const dataSource = ref<Cesium.CustomDataSource | undefined>();
+let dataSource: Cesium.CustomDataSource | undefined;
 const needNewDataSource = ref(false);
 
 const updateDataSource = () => {
-  dataSource.value = new Cesium.CustomDataSource(props.name);
-  props.csEvents.updateDataSource(dataSource.value, props.index);
+  dataSource = new Cesium.CustomDataSource(props.name);
+  props.csEvents.updateDataSource(dataSource, props.index);
   needNewDataSource.value = false;
 };
 
@@ -44,8 +44,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewDataSource.value = true;
-    } else if (dataSource.value) {
-      dataSource.value.name = newValue;
+    } else if (dataSource) {
+      dataSource.name = newValue;
     }
   },
 );
@@ -55,8 +55,8 @@ watch(
   (newValue) => {
     if (newValue === undefined) {
       needNewDataSource.value = true;
-    } else if (dataSource.value) {
-      dataSource.value.show = newValue;
+    } else if (dataSource) {
+      dataSource.show = newValue;
     }
   },
 );

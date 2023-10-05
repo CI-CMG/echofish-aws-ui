@@ -62,11 +62,11 @@ const props = withDefaults(defineProps<{
   colorToAlphaThreshold: 0.004,
 });
 
-const layer = ref<MapboxVectorTileImageryLayer | undefined>();
-const viewer = ref<CustomViewer | undefined>();
-const dataSource = ref<Cesium.DataSource | undefined>();
+let layer: MapboxVectorTileImageryLayer | undefined;
+let viewer: CustomViewer | undefined;
+let dataSource: Cesium.DataSource | undefined;
 const needNewLayer = ref(false);
-const imageryProvider = ref<MapboxVectorTileImageryProvider | undefined>();
+let imageryProvider: MapboxVectorTileImageryProvider | undefined;
 const dataSourceName = computed(() => props.dataSourceName);
 const show = computed(() => props.show);
 const alpha = computed(() => props.alpha);
@@ -89,133 +89,134 @@ const colorToAlpha = computed(() => props.colorToAlpha);
 const colorToAlphaThreshold = computed(() => props.colorToAlphaThreshold);
 
 const updateImageryProvider = (newValue: MapboxVectorTileImageryProvider) => {
-  if (viewer.value && dataSource.value) {
-    imageryProvider.value = newValue;
+  if (viewer && dataSource) {
+    imageryProvider = newValue;
     const newLayer = new MapboxVectorTileImageryLayer(
-      imageryProvider.value,
-      dataSource.value,
-      viewer.value.scene.globe,
+      imageryProvider,
+      dataSource,
+      viewer.scene.globe,
       props,
     );
     props.globeEvents.registerImageryLayer(newLayer, props.index);
-    layer.value = newLayer;
+    layer = newLayer;
   }
   needNewLayer.value = false;
 };
 
 const registerImageryProvider: ImageryProviderRegistration = (ip: Cesium.ImageryProvider) => {
-  imageryProvider.value = ip as MapboxVectorTileImageryProvider;
+  imageryProvider = ip as MapboxVectorTileImageryProvider;
+  needNewLayer.value = true;
 };
 
 watch(show, (newValue) => {
-  if (layer.value) {
-    layer.value.show = newValue;
+  if (layer) {
+    layer.show = newValue;
   }
 });
 
 watch(alpha, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.alpha = newValue;
+  } else if (layer) {
+    layer.alpha = newValue;
   }
 });
 
 watch(brightness, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.brightness = newValue;
+  } else if (layer) {
+    layer.brightness = newValue;
   }
 });
 
 watch(colorToAlpha, (newValue) => {
   if (!newValue) {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.colorToAlpha = newValue;
+  } else if (layer) {
+    layer.colorToAlpha = newValue;
   }
 });
 
 watch(colorToAlphaThreshold, (newValue) => {
-  if (layer.value) {
-    layer.value.colorToAlphaThreshold = newValue;
+  if (layer) {
+    layer.colorToAlphaThreshold = newValue;
   }
 });
 
 watch(contrast, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.contrast = newValue;
+  } else if (layer) {
+    layer.contrast = newValue;
   }
 });
 
 watch(cutoutRectangle, (newValue) => {
   if (!newValue) {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.cutoutRectangle = newValue;
+  } else if (layer) {
+    layer.cutoutRectangle = newValue;
   }
 });
 
 watch(dayAlpha, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.dayAlpha = newValue;
+  } else if (layer) {
+    layer.dayAlpha = newValue;
   }
 });
 
 watch(gamma, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.gamma = newValue;
+  } else if (layer) {
+    layer.gamma = newValue;
   }
 });
 
 watch(hue, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.hue = newValue;
+  } else if (layer) {
+    layer.hue = newValue;
   }
 });
 
 watch(magnificationFilter, (newValue) => {
-  if (layer.value) {
-    layer.value.magnificationFilter = newValue;
+  if (layer) {
+    layer.magnificationFilter = newValue;
   }
 });
 
 watch(minificationFilter, (newValue) => {
-  if (layer.value) {
-    layer.value.minificationFilter = newValue;
+  if (layer) {
+    layer.minificationFilter = newValue;
   }
 });
 
 watch(nightAlpha, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.nightAlpha = newValue;
+  } else if (layer) {
+    layer.nightAlpha = newValue;
   }
 });
 
 watch(saturation, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.saturation = newValue;
+  } else if (layer) {
+    layer.saturation = newValue;
   }
 });
 
 watch(splitDirection, (newValue) => {
   if (typeof newValue === 'function') {
     needNewLayer.value = true;
-  } else if (layer.value) {
-    layer.value.splitDirection = newValue;
+  } else if (layer) {
+    layer.splitDirection = newValue;
   }
 });
 
@@ -235,35 +236,37 @@ watch(maximumTerrainLevel, () => {
   needNewLayer.value = true;
 });
 
-watch(needNewLayer, (newValue) => {
-  if (imageryProvider.value && !needNewLayer.value && newValue) {
-    updateImageryProvider(imageryProvider.value);
+watch(needNewLayer, (newValue, oldValue) => {
+  if (imageryProvider && !oldValue && newValue) {
+    updateImageryProvider(imageryProvider);
   }
 });
 
-watch(imageryProvider, (newValue) => {
-  if (newValue) {
-    updateImageryProvider(newValue);
-  }
-});
+// watch(imageryProvider, (newValue) => {
+//   if (newValue) {
+//     updateImageryProvider(newValue);
+//   }
+// });
 
-watch(viewer, (newValue) => {
-  if (newValue) {
-    needNewLayer.value = true;
-  }
-});
+// watch(viewer, (newValue) => {
+//   if (newValue) {
+//     needNewLayer.value = true;
+//   }
+// });
 
-watch(dataSource, () => {
-  needNewLayer.value = true;
-});
+// watch(dataSource, () => {
+//   needNewLayer.value = true;
+// });
 
 onMounted(() => {
   props.csEvents.onNewViewer((nextViewer) => {
-    viewer.value = nextViewer;
+    viewer = nextViewer;
+    needNewLayer.value = true;
   });
   props.csEvents.onUpdateDatasource((nextDataSource) => {
     if (nextDataSource.name === dataSourceName.value) {
-      dataSource.value = nextDataSource;
+      dataSource = nextDataSource;
+      needNewLayer.value = true;
     }
   });
 });
