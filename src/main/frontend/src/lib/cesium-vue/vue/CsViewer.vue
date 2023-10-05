@@ -270,16 +270,15 @@ class WidgetEventContextImpl implements WidgetEventContext {
     dataSources.forEach((dataSource) => {
       if (dataSource.index < index) {
         tempDataSources.push(dataSource);
-      } else if (dataSource.index === index) {
-        tempDataSources.push(new IndexedDataSource(index, updateDataSource));
-        added = true;
       } else if (dataSource.index > index) {
-        if (added) {
-          tempDataSources.push(dataSource);
-        } else {
+        if (!added) {
           tempDataSources.push(new IndexedDataSource(index, updateDataSource));
           added = true;
         }
+        tempDataSources.push(dataSource);
+      } else if (dataSource.index === index) {
+        tempDataSources.push(new IndexedDataSource(index, updateDataSource));
+        added = true;
       }
     });
     if (!added) {

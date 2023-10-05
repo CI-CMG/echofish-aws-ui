@@ -71,30 +71,32 @@ export default class MapMouseHandler {
 
   // eslint-disable-next-line class-methods-use-this
   public handleEntityClick(longitude: number, latitude: number, pickedFeature: Cesium.Entity) {
-    const shipName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).shipName;
-    const cruiseName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).cruiseName;
-    const sensorName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).sensorName;
-    const geoHashFinder = new GeoHashFinder(shipName, cruiseName, sensorName);
-    return geoHashFinder.find(longitude, latitude).then((storeIndex) => {
-      const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName}/${cruiseName}/${sensorName}/${cruiseName}.zarr`);
-      openArray({ store, path: 'frequency', mode: 'r' })
-        .then((frequencyArray) => frequencyArray.get())
-        .then((nestedArray: any) => Array.from(nestedArray.data))
-        .then((frequencies) => frequencies[0] as number)
-        .then((frequency: number) => {
-          this.router.push({
-            name: 'cruise',
-            params: {
-              shipName,
-              cruiseName,
-              sensorName,
-              storeIndex,
-              depthIndex: 0,
-              frequency,
-            },
+    if (pickedFeature.properties && pickedFeature.properties?.getValue(Cesium.JulianDate.now()).shipName) {
+      const shipName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).shipName;
+      const cruiseName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).cruiseName;
+      const sensorName: string = pickedFeature.properties?.getValue(Cesium.JulianDate.now()).sensorName;
+      const geoHashFinder = new GeoHashFinder(shipName, cruiseName, sensorName);
+      geoHashFinder.find(longitude, latitude).then((storeIndex) => {
+        const store = new HTTPStore(`${ZARR_BASE_URL}/level_2/${shipName}/${cruiseName}/${sensorName}/${cruiseName}.zarr`);
+        openArray({ store, path: 'frequency', mode: 'r' })
+          .then((frequencyArray) => frequencyArray.get())
+          .then((nestedArray: any) => Array.from(nestedArray.data))
+          .then((frequencies) => frequencies[0] as number)
+          .then((frequency: number) => {
+            this.router.push({
+              name: 'cruise',
+              params: {
+                shipName,
+                cruiseName,
+                sensorName,
+                storeIndex,
+                depthIndex: 0,
+                frequency,
+              },
+            });
           });
-        });
-    });
+      });
+    }
   }
 
   private clearFeatureNameContainer() {
@@ -104,10 +106,11 @@ export default class MapMouseHandler {
   }
 
   private updateFeatureNameContainer(pickedFeatures: Array<Cesium.Entity>, position: Cesium.Cartesian2, selectable: boolean) {
+    const filteredFeatures = pickedFeatures.filter((pickedFeature) => pickedFeature.properties && pickedFeature.properties.getValue(Cesium.JulianDate.now()).shipName);
     if (selectable || !this.fnc.fncLocked) {
-      if (pickedFeatures.length) {
+      if (filteredFeatures.length) {
         const deDup: CesiumEntityMapType = {};
-        pickedFeatures.forEach((entity) => {
+        filteredFeatures.forEach((entity) => {
           deDup[`${entity.properties?.getValue(Cesium.JulianDate.now()).shipName}_${entity.properties?.getValue(Cesium.JulianDate.now()).cruiseName}_${entity.properties?.getValue(Cesium.JulianDate.now()).sensorName}`] = entity;
         });
         this.fnc.fncEntities = Object.values(deDup);

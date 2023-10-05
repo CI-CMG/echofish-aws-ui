@@ -26,7 +26,7 @@ function createDataSource(name, show, entities, index) {
   entities.forEach((entity) => {
     const copy = new Cesium.Entity();
     copy.merge(entity);
-    ds.entities.add(entity);
+    ds.entities.add(copy);
   });
   props.csEvents.updateDataSource(ds, index);
   return ds;
@@ -79,7 +79,7 @@ watch(
     nextEntities.forEach((entity) => {
       const copy = new Cesium.Entity();
       copy.merge(entity);
-      dataSource.entities.add(entity);
+      dataSource.entities.add(copy);
     });
   },
 );

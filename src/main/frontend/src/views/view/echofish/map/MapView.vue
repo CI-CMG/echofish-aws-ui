@@ -1,6 +1,6 @@
 <template>
   <div class="main-cesium-container">
-    <cesium-map />
+    <cesium-map :location-entities="[]" />
   </div>
 </template>
 
