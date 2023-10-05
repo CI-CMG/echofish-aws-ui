@@ -52,7 +52,9 @@ import CsScreenSpacePositionedEventAction from '@/lib/cesium-vue/vue/CsScreenSpa
 import FeatureNameContainer from '@/views/view/echofish/map/FeatureNameContainer.vue';
 import MapMouseHandler from '@/views/view/echofish/map/MapMouseHandler';
 import FeatureNameContainerState from '@/views/view/echofish/map/FeatureNameContainerState';
-import { computed, reactive } from 'vue';
+import {
+  computed, reactive,
+} from 'vue';
 import { ZARR_BASE_URL } from '@/basePath';
 import { Router, useRouter } from 'vue-router';
 import FlyToOptions from '@/lib/cesium-vue/api/FlyToOptions';
@@ -71,14 +73,13 @@ const mapMouseHandler = new MapMouseHandler(fnc, router);
 
 const props = withDefaults(defineProps<{
   flyTo?: Cesium.Cartesian3,
-  locationEntities?: Cesium.Entity[],
+  locationEntities: Cesium.Entity[],
 }>(), {
   flyTo: Cesium.Cartesian3.fromDegrees(0, 0, 15000000),
-  locationEntities: () => [],
 });
 
 const flyToCoords = computed(() => props.flyTo);
 const locationEntities = computed(() => props.locationEntities);
-
 const flyTo = computed(() => ({ destination: flyToCoords.value } as FlyToOptions));
+
 </script>
