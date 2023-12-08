@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "echofish",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -30,6 +30,7 @@
     "vue-router": "^4.1.6",
     "vuetify": "^3.1.6",
     "vuex": "^4.1.0",
+    "watch": "^1.0.2",
     "webfontloader": "^1.6.28",
     "zarr": "^0.6.1"
   },
