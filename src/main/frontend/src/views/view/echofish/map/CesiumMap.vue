@@ -75,7 +75,7 @@ const props = withDefaults(defineProps<{
   flyTo?: Cesium.Cartesian3,
   locationEntities: Cesium.Entity[],
 }>(), {
-  flyTo: Cesium.Cartesian3.fromDegrees(0, 0, 15000000),
+  flyTo: Cesium.Cartesian3.fromDegrees(-97.5, 40.0, 15000000),
 });
 
 const flyToCoords = computed(() => props.flyTo);

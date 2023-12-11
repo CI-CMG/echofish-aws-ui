@@ -1,6 +1,7 @@
 <template>
   <div class="echogram-container">
     <div ref="map" />
+
     <div ref="icon">
       <v-icon>mdi-home</v-icon>
     </div>
@@ -24,7 +25,6 @@ import { scaleLinear, scaleThreshold } from 'd3-scale';
 import * as d3 from 'd3';
 import { colorPalettes } from '@/views/view/echofish/cruise/WaterColumnColors';
 import { RawArray } from 'zarr/types/rawArray';
-// import lIcon from 'leaflet/dist/images/marker-icon.png';
 import SelectedEchogramPoint from '@/views/view/echofish/cruise/SelectedEchogramPoint';
 import EchogramCenter from '@/views/view/echofish/cruise/EchogramCenter';
 
@@ -102,7 +102,7 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
   const parts = key.split('_');
   const x = Number.parseInt(parts[0], 10);
   const y = Number.parseInt(parts[1], 10);
-  const z = Number.parseInt(parts[2], 10);
+  // const z = Number.parseInt(parts[2], 10);
   if (svArray.value) {
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -111,9 +111,9 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
       const maxBoundsX = Math.abs(dataDimension[1]);
       const maxBoundsY = Math.abs(dataDimension[0]);
 
-      const maxBoundsValue = [[-1 * Math.ceil(dataDimension[0] / 512) * 512, 0], [0, Math.ceil(dataDimension[1] / 512) * 512]];
-      const maxTileBoundsX = Math.abs(maxBoundsValue[1][1]) / 512;
-      const maxTileBoundsY = Math.abs(maxBoundsValue[0][0]) / 512;
+      // const maxBoundsValue = [[-1 * Math.ceil(dataDimension[0] / 512) * 512, 0], [0, Math.ceil(dataDimension[1] / 512) * 512]];
+      // const maxTileBoundsX = Math.abs(maxBoundsValue[1][1]) / 512;
+      // const maxTileBoundsY = Math.abs(maxBoundsValue[0][0]) / 512;
 
       const indicesLeft = 512 * x;
       const indicesRight = Math.min(512 * x + 512, maxBoundsX);
@@ -125,15 +125,16 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
         .domain(d3.range(0, 255, 255 / palette.value.length))
         .range(palette.value);
 
-      if (y >= maxTileBoundsY || y < 0 || x < 0 || x >= maxTileBoundsX) {
-        ctx.font = '14px serif';
-        ctx.fillText(`{${x}, ${y}, ${z}}`, 20, 40);
-        ctx.strokeStyle = '#07a30c';
-        ctx.beginPath();
-        ctx.rect(10, 10, 502, 502);
-        ctx.stroke();
-        return;
-      }
+      // Diagnostic for getting X-Y-Z location of tiles
+      // if (y >= maxTileBoundsY || y < 0 || x < 0 || x >= maxTileBoundsX) {
+      //   ctx.font = '14px serif';
+      //   ctx.fillText(`{${x}, ${y}, ${z}}`, 20, 40);
+      //   ctx.strokeStyle = '#6b35cd';
+      //   ctx.beginPath();
+      //   ctx.rect(10, 10, 502, 502);
+      //   ctx.stroke();
+      //   return;
+      // }
 
       svArray.value.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), frequencies.value.indexOf(frequency.value)])
         .then((d1) => {
@@ -246,15 +247,19 @@ function load() {
 }
 
 onMounted(() => {
+  console.log('Echogram.vue');
   if (map.value) {
     lMap.value = L.map(map.value, {
       crs: L.CRS.Simple,
       zoom: zoom.value,
-      center: center.value,
+      // center: center.value,
+      // Requires winow.innerHeight to figure out starting value
+      center: [-1 * (window.innerHeight / 2) + 40, center.value[1]],
       minZoom: 0,
       maxZoom: 0,
       zoomControl: false,
     });
+
     // lMap.value.addControl(new L.Control.Zoom({ position: 'bottomright' }));
 
     lMap.value.on('click', cursorUpdated);

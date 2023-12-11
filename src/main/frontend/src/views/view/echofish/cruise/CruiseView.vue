@@ -42,9 +42,11 @@
             <v-icon icon="mdi-information-outline" />
           </v-btn>
         </v-col>
+
         <v-col cols="6" class="d-flex justify-center">
           <color-bar :selectedColorPalette="selectedColorPalette" :min="min" :max="max" />
         </v-col>
+
         <v-col cols="3" class="d-flex justify-end">
           <v-card variant="text">
             <v-card-actions class="justify-center">
