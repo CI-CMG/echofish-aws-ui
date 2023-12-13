@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer :width="500" :model-value="drawer" @update:model-value="close" temporary :scrim="false" disable-route-watcher>
+  <v-navigation-drawer :width="420" :model-value="drawer" @update:model-value="close" temporary :scrim="false" disable-route-watcher>
     <template v-slot:prepend>
       <v-container>
         <v-row align="center" no-gutters>
@@ -31,21 +31,46 @@
           <v-col>{{utcTime}}</v-col>
         </v-row>
         <v-row v-if="localTime">
-          <v-col cols="4">Time At Location:</v-col>
+          <v-col cols="4">Local time:</v-col>
           <v-col>{{localTime}}</v-col>
         </v-row>
         <v-row v-if="selectedEchogramPoint?.longitude != undefined && selectedEchogramPoint?.latitude != undefined">
-          <v-col cols="4">Location:</v-col>
-          <v-col>{{`${selectedEchogramPoint.longitude.toFixed(3)} E/W, ${selectedEchogramPoint.latitude.toFixed(3)} N/S`}}</v-col>
+          <v-col cols="4">Longitude/Latitude:</v-col>
+          <v-col>
+            {{
+              `${selectedEchogramPoint.longitude.toFixed(4)}&deg;, ${selectedEchogramPoint.latitude.toFixed(4)}&deg;`
+            }}
+          </v-col>
         </v-row>
         <v-row v-if="selectedEchogramPoint?.depthMeters != undefined">
           <v-col cols="4">Depth (m):</v-col>
-          <v-col>{{-selectedEchogramPoint.depthMeters}}</v-col>
+          <v-col>
+            {{-Math.round(selectedEchogramPoint.depthMeters * 100) / 100}}
+          </v-col>
         </v-row>
-        <v-row v-if="selectedEchogramPoint?.sv != undefined">
-          <v-col cols="4">Selected (Sv):</v-col>
-          <v-col>{{selectedEchogramPoint.sv}} dB</v-col>
+        <v-row>
+          <v-col cols="4">Selected Sv (dB):</v-col>
+          <v-col>
+            <span v-if="selectedEchogramPoint && selectedEchogramPoint.sv">
+              {{Math.round(selectedEchogramPoint.sv * 100) / 100}}
+            </span>
+          </v-col>
         </v-row>
+        <v-row>
+          <v-col cols="4">Calibration info:</v-col>
+          <v-col><i>calibrated with calibration data</i></v-col>
+        </v-row>
+
+        <!--<hr />
+        <br />-->
+
+        <!--<v-row>-->
+        <!--<v-progress-linear v-model="scaleValue" :height="11" color="white" />-->
+        <!--</v-row>-->
+
+        <!--<br />
+        <hr />-->
+
         <v-row>
           <v-col>
             <v-form>
@@ -109,6 +134,7 @@ const props = withDefaults(defineProps< {
   selectedColorPalette: string,
   min: number,
   max: number,
+  // selectedEchogramPoint?: SelectedEchogramPoint,
   selectedEchogramPoint?: SelectedEchogramPoint,
   flyTo: Cesium.Cartesian3,
 }>(), {
@@ -164,6 +190,9 @@ const locationEntities = computed(() => [new Cesium.Entity({
 
 const minDeb = ref(`${min.value}`);
 const maxDeb = ref(`${max.value}`);
+
+// TODO: temporary scale value shown for depth in meters. WIP
+// const scaleValue = 20;
 
 const frequencies = computed(() => props.frequencies);
 

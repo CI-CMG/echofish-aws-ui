@@ -107,13 +107,10 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       const dataDimension = svArray.value.meta.shape;
+      console.log(dataDimension);
 
       const maxBoundsX = Math.abs(dataDimension[1]);
       const maxBoundsY = Math.abs(dataDimension[0]);
-
-      // const maxBoundsValue = [[-1 * Math.ceil(dataDimension[0] / 512) * 512, 0], [0, Math.ceil(dataDimension[1] / 512) * 512]];
-      // const maxTileBoundsX = Math.abs(maxBoundsValue[1][1]) / 512;
-      // const maxTileBoundsY = Math.abs(maxBoundsValue[0][0]) / 512;
 
       const indicesLeft = 512 * x;
       const indicesRight = Math.min(512 * x + 512, maxBoundsX);
@@ -125,16 +122,22 @@ function drawTile(key: string, canvas: HTMLCanvasElement) {
         .domain(d3.range(0, 255, 255 / palette.value.length))
         .range(palette.value);
 
+      const maxBoundsValue = [[-1 * Math.ceil(dataDimension[0] / 512) * 512, 0], [0, Math.ceil(dataDimension[1] / 512) * 512]];
+      const maxTileBoundsX = Math.abs(maxBoundsValue[1][1]) / 512;
+      const maxTileBoundsY = Math.abs(maxBoundsValue[0][0]) / 512;
+
       // Diagnostic for getting X-Y-Z location of tiles
-      // if (y >= maxTileBoundsY || y < 0 || x < 0 || x >= maxTileBoundsX) {
-      //   ctx.font = '14px serif';
-      //   ctx.fillText(`{${x}, ${y}, ${z}}`, 20, 40);
-      //   ctx.strokeStyle = '#6b35cd';
-      //   ctx.beginPath();
-      //   ctx.rect(10, 10, 502, 502);
-      //   ctx.stroke();
-      //   return;
-      // }
+      if (y >= maxTileBoundsY || y < 0 || x < 0 || x >= maxTileBoundsX) {
+        ctx.font = '14px serif';
+        // ctx.fillText(`{${x}, ${y}, 0}`, 20, 40);
+        ctx.fillStyle = '#BEBEBE';
+        ctx.fillText(`{${x}, ${y}}`, 20, 40);
+        // ctx.strokeStyle = '#6b35cd';
+        // ctx.beginPath();
+        // ctx.rect(10, 10, 502, 502);
+        // ctx.stroke();
+        return;
+      }
 
       svArray.value.getRaw([slice(indicesTop, indicesBottom), slice(indicesLeft, indicesRight), frequencies.value.indexOf(frequency.value)])
         .then((d1) => {
@@ -247,16 +250,16 @@ function load() {
 }
 
 onMounted(() => {
-  console.log('Echogram.vue');
   if (map.value) {
     lMap.value = L.map(map.value, {
+      // TODO: https://gis.stackexchange.com/questions/200865/leaflet-crs-simple-custom-scale
       crs: L.CRS.Simple,
       zoom: zoom.value,
-      // center: center.value,
       // Requires winow.innerHeight to figure out starting value
       center: [-1 * (window.innerHeight / 2) + 40, center.value[1]],
       minZoom: 0,
       maxZoom: 0,
+      // edgeBufferTiles: 5, // https://www.npmjs.com/package/leaflet-edgebuffer
       zoomControl: false,
     });
 
@@ -290,6 +293,13 @@ onMounted(() => {
 
     lMap.value.addLayer(layer);
     load();
+
+    // experimenting with adding scale to water-column viewer
+    L.control.scale({
+      position: 'bottomright',
+      maxWidth: 400,
+      imperial: false,
+    }).addTo(lMap.value);
   }
 });
 

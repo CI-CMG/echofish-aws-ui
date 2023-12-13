@@ -19,6 +19,7 @@
       :selected-echogram-point="selectedEchogramPoint"
       :fly-to="flyTo"
     />
+
     <echogram
       v-if="frequencies.length"
       :sensor-name="sensorName"
@@ -34,6 +35,7 @@
       @update-selected-point="updateSelectedEchogramPoint"
       @update-location="updateLocation"
     />
+
     <v-container style="position: absolute; top: 0; left: 0; right: 0;" fluid class="pa-0">
       <v-row no-gutters>
         <v-col cols="3">

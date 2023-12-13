@@ -125,3 +125,14 @@
 .leaflet-dragging .leaflet-grab{
   cursor: move;
 }
+
+// removes the leaflet logo
+.leaflet-control-attribution {
+  display: none;
+}
+
+// experimental, rotate the depth scale indicator
+.leaflet-control-scale {
+  //transform: rotate(90deg);
+  transform: rotate(90deg) translate(-170px, -125px);
+}
