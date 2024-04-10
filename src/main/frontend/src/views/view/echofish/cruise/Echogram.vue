@@ -300,6 +300,13 @@ onMounted(() => {
       maxWidth: 400,
       imperial: false,
     }).addTo(lMap.value);
+
+    L.control.scale({
+      position: 'bottomright',
+      maxWidth: 400,
+      metric: true,
+      imperial: false,
+    }).addTo(lMap.value);
   }
 });
 

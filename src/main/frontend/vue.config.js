@@ -1,7 +1,7 @@
 const { defineConfig } = require('@vue/cli-service');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { VuetifyPlugin } = require('webpack-plugin-vuetify')
+// const { VuetifyPlugin } = require('webpack-plugin-vuetify');
 
 module.exports = defineConfig({
 
@@ -28,9 +28,9 @@ module.exports = defineConfig({
   configureWebpack: (config) => {
     config.devtool = process.env.NODE_ENV === 'production' ? 'source-map' : 'eval-source-map';
 
-    config.output.devtoolModuleFilenameTemplate = info => info.resourcePath.match(/^\.\/\S*?\.vue$/)
-        ? `webpack-generated:///${info.resourcePath}?${info.hash}`
-        : `webpack-yourCode:///${info.resourcePath}`;
+    config.output.devtoolModuleFilenameTemplate = (info) => (info.resourcePath.match(/^\.\/\S*?\.vue$/) && !info.identifier.match(/type=script/)
+      ? `webpack-generated:///${info.resourcePath}?${info.hash}`
+      : `webpack-yourCode:///${info.resourcePath}`);
 
     config.output.devtoolFallbackModuleFilenameTemplate = 'webpack:///[resource-path]?[hash]';
 

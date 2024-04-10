@@ -116,7 +116,6 @@
       fill: white;
     }
   }
-
 }
 
 .leaflet-grab {
@@ -132,7 +131,33 @@
 }
 
 // experimental, rotate the depth scale indicator
-.leaflet-control-scale {
+.leaflet-control-scale{
+  font-size: 1.5em;
+}
+.leaflet-control-scale:first-child {
+  //border: 2px solid red;
   //transform: rotate(90deg);
   transform: rotate(90deg) translate(-170px, -125px);
+
+  .leaflet-control-scale-line:before {
+    content: 'Depth ';
+  }
+  .leaflet-control-scale-line:after {
+    content: ' →';
+  }
 }
+.leaflet-control-scale:nth-child(2) {
+  //border: 2px solid red;
+  transform: translate(-50px, -25px);
+
+  //First override to hide default text values
+  .leaflet-control-scale-line {
+    color: white;
+  }
+  .leaflet-control-scale-line:before {
+    color: black;
+    content: 'Time →';
+    margin-right: 500px;
+  }
+}
+

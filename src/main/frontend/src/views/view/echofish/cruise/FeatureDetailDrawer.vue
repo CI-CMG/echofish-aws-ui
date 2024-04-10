@@ -35,7 +35,7 @@
           <v-col>{{localTime}}</v-col>
         </v-row>
         <v-row v-if="selectedEchogramPoint?.longitude != undefined && selectedEchogramPoint?.latitude != undefined">
-          <v-col cols="4">Longitude/Latitude:</v-col>
+          <v-col cols="4">Lon/Lat (&deg;E, &deg;N):</v-col>
           <v-col>
             {{
               `${selectedEchogramPoint.longitude.toFixed(4)}&deg;, ${selectedEchogramPoint.latitude.toFixed(4)}&deg;`

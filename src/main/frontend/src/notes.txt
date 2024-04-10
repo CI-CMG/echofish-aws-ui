@@ -1,0 +1,78 @@
+These are just some observations for s3 hosting w cloudfront to try and
+keep the vue router happy traversing pages... -rk
+
+Bucket
+    prod-echofish-ui-www
+    Static website hosting:
+        enabled
+        host a static website
+        index document
+            index.html
+        error document
+            index.html <-- important, needed for fallback when you lose context root
+    bucket policy:
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "PublicReadGetObject",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::prod-echofish-ui-www/*"
+                }
+            ]
+        }
+
+Cloudfront:
+    E1MXO35K1PLM3Y
+    Distribution domain name
+        d3faxj4r16q5ux.cloudfront.net
+    ARN
+        arn:aws:cloudfront::118234403147:distribution/E1MXO35K1PLM3Y
+    Description
+        this is temporary prod deployment of echofish
+    Price class
+        Use only North America and Europe
+    Supported HTTP versions
+        HTTP/2, HTTP/1.1, HTTP/1.0
+    Alternate domain names
+        www.echo.fish, test.echo.fish
+    Custom SSL certificate
+        *.echo.fish
+    Security policy
+        TLSv1.2_2021
+    IPV6
+        On <-- never sure about this???
+    Origins:
+        Origin domain:
+            prod-echofish-ui-www.s3-website-us-west-2.amazonaws.com
+        Protocol
+            HTTP only
+        Origin Path:
+            none specified
+
+echofish-aws-ui
+    <script type="application/javascript">
+        window.CESIUM_BASE_URL = '/ui/Cesium';
+        window.applicationConfiguration = {
+            contextRoot: '/',
+            version: '1.0.1',
+            zarrBaseUrl: 'https://noaa-wcsd-zarr-pds.s3.us-east-1.amazonaws.com'
+        };
+    </script>
+    vue-config.js
+        NODE_ENV = development
+
+Update index.html removing everything
+
+Problems still:
+    icons not rendered properly for www.echo.fish
+    need to fix vue-config.js
+    need to compile w NODE_ENV set to production
+
+Need to invalidate caches with deploy script?
+
+Terraform/cloudformation
+
+

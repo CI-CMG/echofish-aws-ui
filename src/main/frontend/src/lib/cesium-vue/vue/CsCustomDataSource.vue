@@ -17,7 +17,8 @@ const props = withDefaults(defineProps< {
   entities: Cesium.Entity[]
 }>(), {
   clustering: undefined,
-  show: true,
+  // show: true,
+  show: undefined,
 });
 
 function createDataSource(name, show, entities, index) {
